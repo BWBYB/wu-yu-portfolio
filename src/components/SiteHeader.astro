@@ -1,0 +1,38 @@
+---
+import MobileMenu from './MobileMenu';
+
+interface Props {
+	activePath?: string;
+}
+
+const { activePath = '/' } = Astro.props;
+const links = [
+	{ href: '/', label: '首页' },
+	{ href: '/projects/', label: '项目' },
+	{ href: '/blog/', label: '博客' },
+	{ href: '/about/', label: '关于我' },
+];
+---
+
+<header class="site-header">
+	<div class="page-shell site-header__inner">
+		<a class="wordmark" href="/" aria-label="返回首页">
+			<span class="wordmark__name">WU YU</span>
+			<span class="wordmark__meta">PORTFOLIO / 2026</span>
+		</a>
+
+		<nav class="desktop-nav" aria-label="主导航">
+			{links.map((link) => (
+				<a class:list={{ 'nav-link': true, 'nav-link--active': activePath === link.href }} href={link.href} aria-current={activePath === link.href ? 'page' : undefined}>
+					{link.label}
+				</a>
+			))}
+			<a class="header-agent-link" href="/#agent">
+				<span>和我的 Agent 聊聊</span>
+				<span aria-hidden="true">↗</span>
+			</a>
+		</nav>
+
+		<MobileMenu client:load links={links} />
+	</div>
+</header>

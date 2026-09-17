@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { posts, statusLabel } from '../../lib/content';
+---
+
+<BaseLayout title="博客 · Wu Yu" description="吴禹的学习记录和项目复盘。" activePath="/blog/">
+	<section class="page-intro page-shell"><p class="eyebrow">NOTES / IN PROGRESS</p><h1>把正在学习的东西，<br /><em style="color: var(--terracotta); font-style: normal;">写下来。</em></h1><p>这里会记录我进入 AI Agent 开发之后的学习过程，也会复盘项目里那些值得重新思考的工程决策。</p></section>
+	<section class="section page-shell"><div class="listing">{posts.map((post, index) => <article class="listing-item"><span class="listing-item__index">0{index + 1}</span><div><h2>{post.data.title}</h2><p>{post.data.summary}</p><div class="tag-row" style="margin-top: 14px">{post.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div></div><div class="listing-item__meta"><span>{post.data.date}</span><br /><span class="status-label">{statusLabel(post.data.status)}</span></div></article>)}</div><p class="prose-note">博客内容会在资料整理完成后逐篇发布。现在先把真实项目和学习方向留在这里。</p></section>
+</BaseLayout>

@@ -1,0 +1,16 @@
+---
+import { ArrowUpRight } from '@lucide/astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { statusLabel } from '../../lib/content';
+
+const projects = await getCollection('projects');
+const published = projects.filter(({ data }) => data.status === 'published');
+const organizing = projects.filter(({ data }) => data.status === 'organizing');
+---
+
+<BaseLayout title="项目 · Wu Yu" description="吴禹的项目经历与工程实践。" activePath="/projects/">
+	<section class="page-intro page-shell"><p class="eyebrow">SELECTED WORK / 2024—2026</p><h1>项目，是最诚实的<br /><em style="color: var(--terracotta); font-style: normal;">自我介绍。</em></h1><p>从浏览器交互到任务服务和容器部署，我更关心一个系统如何被真正使用、验证和交接。</p></section>
+	<section class="section page-shell"><div class="section__header"><div><p class="eyebrow">01 / PUBLISHED CASE STUDY</p><h2 class="section-heading">完整案例</h2></div></div><div class="listing">{published.map((project) => <article class="listing-item"><span class="listing-item__index">01</span><div><h2>{project.data.title}</h2><p>{project.data.summary}</p><div class="tag-row" style="margin-top: 14px">{project.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div></div><div class="listing-item__meta"><span>{project.data.date}</span><br /><a class="text-link" href={`/projects/${project.data.slug}/`}>查看案例 <ArrowUpRight size={14} aria-hidden="true" /></a></div></article>)}</div></section>
+	<section class="section page-shell"><div class="section__header"><div><p class="eyebrow">02 / ORGANIZING</p><h2 class="section-heading">正在整理</h2></div><div class="section__header-copy"><p>这些项目已经参与过，详细案例会在资料补齐后继续发布。</p></div></div><div class="listing">{organizing.map((project, index) => <article class="listing-item"><span class="listing-item__index">0{index + 2}</span><div><h2>{project.data.title}</h2><p>{project.data.summary}</p></div><div class="listing-item__meta"><span>{project.data.date}</span><br /><span class="status-label">{statusLabel(project.data.status)}</span></div></article>)}</div></section>
+</BaseLayout>

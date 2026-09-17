@@ -1,0 +1,37 @@
+---
+import '../styles/global.css';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+	activePath?: string;
+}
+
+const {
+	title = 'Wu Yu · 从全栈工程，走向 AI Agent',
+	description = '吴禹的个人作品集：从全栈工程实践，走向 AI Agent 开发。',
+	activePath = Astro.url.pathname,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<a class="skip-link" href="#main-content">跳到主要内容</a>
+		<SiteHeader activePath={activePath} />
+		<main id="main-content">
+			<slot />
+		</main>
+		<SiteFooter />
+	</body>
+</html>

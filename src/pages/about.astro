@@ -1,0 +1,14 @@
+---
+import { Download } from '@lucide/astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const profile = await getCollection('profile');
+const experiences = await getCollection('experiences');
+const person = profile[0]?.data;
+---
+
+<BaseLayout title="关于我 · Wu Yu" description="吴禹的教育背景、技术栈和校园经历。" activePath="/about/">
+	<section class="page-intro page-shell"><p class="eyebrow">ABOUT / WU YU</p><h1>一个正在转向<br /><em style="color: var(--terracotta); font-style: normal;">AI Agent 的全栈开发者。</em></h1></section>
+	<section class="about-grid page-shell"><aside class="about-sidebar"><p class="about-sidebar__statement">先把系统做出来，<br />再让它变得更聪明。</p><div class="about-sidebar__meta"><span>{person?.school} · {person?.major}</span><span>{person?.location} · {person?.graduation} 届</span><span>求职方向：前端 / 全栈 / AI Agent</span></div><a class="button-primary" href="/resume/wu-yu-resume.pdf" download>下载简历 <Download size={16} aria-hidden="true" /></a></aside><div class="about-main"><section class="about-section"><p class="eyebrow">01 / FOUNDATION</p><h2>教育与技术基础</h2><p>我在华侨大学学习计算机科学与技术，主修数据结构与算法、操作系统、数据库原理、计算机网络、Web 开发技术和软件工程。项目实践覆盖前端、后端、数据和部署，最近开始把这些经验迁移到 AI 应用开发。</p></section><section class="about-section"><p class="eyebrow">02 / SKILLS</p><h2>我能带进项目的工具。</h2><div class="skill-groups"><div class="skill-group"><strong>前端</strong><span>HTML / JavaScript / TypeScript / React / Vue3 / 微信小程序</span></div><div class="skill-group"><strong>后端</strong><span>Spring Boot / FastAPI / Node.js / WebSocket</span></div><div class="skill-group"><strong>数据与部署</strong><span>MySQL / SQLite / Neo4j / Docker</span></div><div class="skill-group"><strong>工程协作</strong><span>Git / GitHub</span></div><div class="skill-group"><strong>AI 辅助开发</strong><span>Codex / Cursor / OpenCode</span></div></div></section><section class="about-section"><p class="eyebrow">03 / CAMPUS</p><h2>在项目之外，练习协作。</h2><div class="experience-list">{experiences.map((experience) => <article class="experience-item"><div class="experience-item__meta"><span>{experience.data.date}</span><span>{experience.data.location}</span></div><h3>{experience.data.title}</h3><p>{experience.data.summary}</p></article>)}</div></section></div></section>
+</BaseLayout>
