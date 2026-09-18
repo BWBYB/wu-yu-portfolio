@@ -110,9 +110,9 @@ Public error behavior:
 
 **Interfaces:**
 - `load_knowledge() -> list[KnowledgeDocument]` returns exactly two documents with stable source labels and non-empty content.
-- `build_messages(question: str, history: list[ChatMessage], documents: list[KnowledgeDocument]) -> list[dict[str, str]]` returns one grounding system message, bounded history, and the current user message.
+- `build_messages(question: str, history: list[ChatMessage], documents: list[KnowledgeDocument], max_history: int) -> list[dict[str, str]]` returns one grounding system message, bounded history, and the current user message.
 
-- [ ] **Step 1: Write tests** asserting both source labels load, the prompt contains the verified corpus, history is capped at `settings.max_history`, and the prompt instructs the model to say when information is unavailable.
+- [ ] **Step 1: Write tests** asserting both source labels load, the prompt contains the verified corpus, history is capped at the explicit `max_history` argument, and the prompt instructs the model to say when information is unavailable.
 - [ ] **Step 2: Run `cd backend && pytest -q tests/test_knowledge.py`** and confirm failure because corpus loading and prompt functions do not exist.
 - [ ] **Step 3: Copy only confirmed facts from the existing profile and SPMTrack pages into the two Markdown files; include a short `Source` line in each file. Implement deterministic UTF-8 loading relative to the repository root.
 - [ ] **Step 4: Run the focused tests** and confirm the context and grounding rules are present.
@@ -164,7 +164,7 @@ Public error behavior:
 
 **Interfaces:**
 - `askKnowledgeBase(question: string, history: AgentMessage[]): Promise<AgentResponse>` remains the only chat entry point used by the component.
-- Remote requests post to `${PUBLIC_AGENT_API_URL.replace(/\/$/, '')}/api/chat` with `{ message: question, history }` and parse `{ answer, sources, mode }`.
+- Remote requests post to `${PUBLIC_AGENT_API_URL.replace(/\/$/, '')}/api/chat` with `{ message: question, history }` and parse `{ answer, sources, mode }`. `AgentMessage` keeps optional `sources?: string[]` and `mode?: 'demo' | 'remote'` on assistant entries so the component can render response provenance without changing the request history shape.
 - Absent URL uses `getDemoResponse`; configured URL plus a non-2xx response throws an error so the UI displays its existing retry state.
 
 - [ ] **Step 1: Write tests** for demo-mode preservation, exact remote request body, response validation, and non-2xx failure propagation.
