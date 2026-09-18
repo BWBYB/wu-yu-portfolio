@@ -92,13 +92,17 @@ def test_generate_answer_maps_empty_model_output(fake_client, content):
 
     with pytest.raises(ModelUnavailableError, match="model unavailable"):
         __import__("asyncio").run(generate_answer([], settings))
+    assert fake_client.instances[0].closed is True
 
 
 def test_generate_answer_maps_provider_exception_without_leaking_text(fake_client):
-    fake_client.error = RuntimeError("provider secret response")
+    fake_client.error = RuntimeError(
+        "provider secret response"
+    )
     settings = Settings(openai_api_key="test-key")
 
     with pytest.raises(ModelUnavailableError, match="model unavailable") as error:
         __import__("asyncio").run(generate_answer([], settings))
 
     assert "provider secret response" not in str(error.value)
+    assert fake_client.instances[0].closed is True

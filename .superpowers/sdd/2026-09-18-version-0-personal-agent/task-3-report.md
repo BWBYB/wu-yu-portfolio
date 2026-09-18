@@ -36,3 +36,5 @@ Implemented the backend model boundary in `backend/app/llm.py` using one OpenAI-
 The review identified that the per-call `AsyncOpenAI` client was not closed. Updated `generate_answer` to await `client.close()` in a `finally` block on both successful and failing provider calls, and extended the fake-client success test to assert closure. The existing public behavior and exception mapping are unchanged.
 
 Focused verification after the fix: `6 passed`.
+
+The focused tests also explicitly exercise closure after empty-output and provider-exception paths.
