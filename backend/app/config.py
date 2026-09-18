@@ -1,14 +1,17 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     openai_model: str = "gpt-4o-mini"
-    allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4321"])
+    allowed_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:4321"]
+    )
     max_history: int = Field(default=8, ge=0)
     max_message_chars: int = Field(default=2000, ge=1)
     llm_timeout_seconds: float = Field(default=30.0, gt=0)
