@@ -67,16 +67,23 @@ describe('remote knowledge-base adapter', () => {
 		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
 	});
 
-	it('aborts a request after the bounded timeout', async () => {
+	it('keeps a slow request alive until the 75 second timeout', async () => {
 		vi.useFakeTimers();
+		let aborted = false;
 		vi.mocked(fetch).mockImplementation((_input, init) => new Promise((_resolve, reject) => {
-			init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+			init?.signal?.addEventListener('abort', () => {
+				aborted = true;
+				reject(new DOMException('Aborted', 'AbortError'));
+			});
 		}));
 
 		const request = askKnowledgeBase('问题', []);
 		const rejection = expect(request).rejects.toThrow(/timed out|aborted/i);
-		await vi.advanceTimersByTimeAsync(10_001);
+		await vi.advanceTimersByTimeAsync(74_999);
+		expect(aborted).toBe(false);
+		await vi.advanceTimersByTimeAsync(1);
 
 		await rejection;
+		expect(aborted).toBe(true);
 	});
 });
