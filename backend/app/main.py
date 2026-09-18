@@ -8,10 +8,11 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
-from app.knowledge import load_knowledge
+from app.knowledge import build_chunks, load_knowledge
 from app.llm import ConfigurationError, ModelUnavailableError, generate_answer
 from app.models import ChatRequest, ChatResponse
 from app.prompts import build_messages
+from app.retrieval import retrieve_chunks
 
 
 app = FastAPI(title="Wu Yu Personal Knowledge Agent")
@@ -48,6 +49,8 @@ async def log_request_metadata(request: Request, call_next):
             "message_length": getattr(request.state, "message_length", None),
             "history_count": getattr(request.state, "history_count", None),
             "sources_count": getattr(request.state, "sources_count", None),
+            "retrieved_chunks": getattr(request.state, "retrieved_chunks", None),
+            "retrieved_sources_count": getattr(request.state, "retrieved_sources_count", None),
             "error_category": error_category,
         }
         request_logger.info(json.dumps(metadata, ensure_ascii=False, sort_keys=True))
@@ -86,10 +89,15 @@ async def chat(
 
     documents = load_knowledge()
     http_request.state.sources_count = len(documents)
+    chunks = build_chunks(tuple(documents))
+    selected_chunks = retrieve_chunks(request.message, chunks)
+    selected_sources = list(dict.fromkeys(chunk.source for chunk in selected_chunks))
+    http_request.state.retrieved_chunks = len(selected_chunks)
+    http_request.state.retrieved_sources_count = len(selected_sources)
     messages = build_messages(
         question=request.message,
         history=request.history,
-        documents=documents,
+        chunks=selected_chunks,
         max_history=settings.max_history,
     )
     try:
@@ -103,6 +111,6 @@ async def chat(
 
     return ChatResponse(
         answer=answer,
-        sources=[document.source for document in documents],
+        sources=selected_sources,
         mode="remote",
     )

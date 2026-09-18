@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
 from app import main
-from app.knowledge import KnowledgeDocument
+from app.knowledge import KnowledgeChunk, KnowledgeDocument
 from app.main import app
 from app.models import ChatResponse
 from app.llm import ConfigurationError, ModelUnavailableError
@@ -97,6 +97,9 @@ def test_chat_response_schema_has_remote_contract() -> None:
 
 def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     captured = {}
+    selected = (
+        KnowledgeChunk("个人资料:0", "个人资料", "技术栈", "profile-doc"),
+    )
 
     def fake_load_knowledge():
         return [
@@ -104,11 +107,17 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
             KnowledgeDocument(source="SPMTrack 项目资料", content="spmtrack-doc"),
         ]
 
-    def fake_build_messages(question, history, documents, max_history):
+    def fake_build_chunks(documents):
+        return selected
+
+    def fake_retrieve_chunks(question, chunks):
+        return selected
+
+    def fake_build_messages(question, history, chunks, max_history):
         captured.update(
             question=question,
             history=history,
-            documents=documents,
+            chunks=chunks,
             max_history=max_history,
         )
         return [{"role": "user", "content": question}]
@@ -118,6 +127,8 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
         return "来自知识库的回答"
 
     monkeypatch.setattr(main, "load_knowledge", fake_load_knowledge)
+    monkeypatch.setattr(main, "build_chunks", fake_build_chunks, raising=False)
+    monkeypatch.setattr(main, "retrieve_chunks", fake_retrieve_chunks, raising=False)
     monkeypatch.setattr(main, "build_messages", fake_build_messages)
     monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
 
@@ -132,12 +143,26 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "answer": "来自知识库的回答",
-        "sources": ["个人资料", "SPMTrack 项目资料"],
+        "sources": ["个人资料"],
         "mode": "remote",
     }
     assert captured["question"] == "我是谁？"
     assert captured["history"][0].content == "你好"
+    assert captured["chunks"] == selected
     assert captured["max_history"] == 8
+
+
+def test_chat_returns_empty_sources_when_retrieval_finds_nothing(monkeypatch) -> None:
+    async def fake_generate_answer(messages, settings):
+        return "资料中没有足够信息"
+
+    monkeypatch.setattr(main, "retrieve_chunks", lambda question, chunks: (), raising=False)
+    monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
+
+    response = client.post("/api/chat", json={"message": "未收录的问题"})
+
+    assert response.status_code == 200
+    assert response.json()["sources"] == []
 
 
 def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, caplog) -> None:
@@ -155,6 +180,8 @@ def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, c
     assert '"status": 200' in messages
     assert '"message_length": 11' in messages
     assert '"history_count": 0' in messages
+    assert '"retrieved_chunks":' in messages
+    assert '"retrieved_sources_count":' in messages
     assert "不会出现在日志里的问题" not in messages
     assert "不会出现在日志里的回答" not in messages
 
