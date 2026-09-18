@@ -24,4 +24,10 @@ describe('local knowledge-base adapter', () => {
 
 		expect(history).toHaveLength(1);
 	});
+
+	it('preserves demo provenance metadata on every answer', async () => {
+		const response = await askKnowledgeBase('你是谁？', []);
+
+		expect(response).toMatchObject({ mode: 'demo', sources: ['个人资料'] });
+	});
 });

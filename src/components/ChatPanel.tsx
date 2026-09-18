@@ -31,7 +31,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 
 		try {
 			const result = await askKnowledgeBase(trimmed, messages);
-			setMessages([...nextHistory, { role: 'assistant', content: result.answer }]);
+			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
 		} catch {
 			setError('这次回答没有生成成功，请重试。');
 			setFailedQuestion(trimmed);
@@ -83,7 +83,12 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 					<div className={`chat-message chat-message--${message.role}`} key={`${message.role}-${index}-${message.content}`}>
 						<span className="chat-message__role">{message.role === 'user' ? '你' : 'WU YU · AGENT'}</span>
 						<p>{message.content}</p>
-						{message.role === 'assistant' && <span className="chat-message__mode">演示模式 · 基于当前整理的资料</span>}
+						{message.role === 'assistant' && (
+							<span className="chat-message__mode">
+								{message.mode === 'remote' ? '远程模式' : '演示模式'}
+								{message.sources?.length ? ` · 来源：${message.sources.join('、')}` : ''}
+							</span>
+						)}
 					</div>
 				))}
 				{isLoading && <div className="chat-message chat-message--assistant chat-message--loading"><span className="chat-message__role">WU YU · AGENT</span><p>正在整理回答<span className="loading-dots" aria-hidden="true">...</span></p></div>}
