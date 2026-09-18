@@ -1,4 +1,5 @@
 import json
+import importlib.util
 from pathlib import Path
 
 from fastapi.routing import APIRoute
@@ -18,6 +19,22 @@ def test_vercel_entrypoint_exports_existing_fastapi_routes() -> None:
 def test_vercel_function_includes_backend_and_knowledge_files() -> None:
     config = json.loads(Path("vercel.json").read_text(encoding="utf-8"))
 
-    function = config["functions"]["api/index.py"]
+    function = config["functions"]["api/**/*.py"]
     assert function["maxDuration"] == 60
     assert function["includeFiles"] == "{backend/**,knowledge/**}"
+
+
+def test_root_requirements_delegates_to_backend_requirements() -> None:
+    assert Path("requirements.txt").read_text(encoding="utf-8").strip() == (
+        "-r backend/requirements.txt"
+    )
+
+
+def test_vercel_catch_all_entrypoint_exports_the_existing_app() -> None:
+    entrypoint = Path("api/[...path].py")
+    spec = importlib.util.spec_from_file_location("vercel_catch_all", entrypoint)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.app is app
