@@ -56,7 +56,16 @@ backend/.venv/bin/pip install -r backend/requirements.txt
 cp backend/.env.example backend/.env
 ```
 
-随后编辑 `backend/.env`，至少填写服务端使用的 `OPENAI_API_KEY`。如果中转站提供 OpenAI 兼容接口，同时填写 `OPENAI_BASE_URL`；模型名由 `OPENAI_MODEL` 指定。
+随后编辑 `backend/.env`，至少填写服务端使用的 `OPENAI_API_KEY`。如果中转站提供 OpenAI 兼容接口，同时填写 `OPENAI_BASE_URL`；模型名由 `OPENAI_MODEL` 指定，调用协议由 `OPENAI_API_MODE` 指定。`OPENAI_API_MODE` 支持 `chat_completions` 和 `responses`，默认保持 `chat_completions` 以兼容现有供应商。
+
+HeiyuCode 的 Codex 分组 Key 使用 Responses API，可按下面配置：
+
+```dotenv
+OPENAI_API_KEY=你的Codex分组Key
+OPENAI_BASE_URL=https://www.heiyucode.com
+OPENAI_MODEL=gpt-5.5
+OPENAI_API_MODE=responses
+```
 
 从 `backend/` 目录启动服务：
 

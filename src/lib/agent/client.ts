@@ -1,7 +1,7 @@
 import { getDemoResponse } from './demo';
 import type { AgentMessage, AgentResponse } from './types';
 
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 75_000;
 const MAX_HISTORY_MESSAGES = 8;
 
 function isValidRemoteResponse(value: unknown): value is AgentResponse {

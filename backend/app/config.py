@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     openai_model: str = "gpt-4o-mini"
+    openai_api_mode: Literal["chat_completions", "responses"] = "chat_completions"
     allowed_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:4321"]
     )
