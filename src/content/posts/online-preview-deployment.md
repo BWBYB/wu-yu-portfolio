@@ -35,7 +35,8 @@ Browser
   -> HeiyuCode Responses API
 ```
 
-- 部署适配文件为 `api/index.py` 与 `vercel.json`，由入口复用已有 FastAPI app，并显式包含资料文件。
+- 部署适配文件为 `api/index.py`、`api/[...path].py` 与 `vercel.json`，由入口复用已有 FastAPI app，并显式包含资料文件。
+- 根目录 `requirements.txt` 直接列出运行时依赖；Vercel Python 构建器不接受 `-r backend/requirements.txt` 这种递归引用。
 - 浏览器不直连模型，因为 Key 必须留在服务端，且同域 Function 可以统一错误和日志边界。
 
 ## 4. 部署适配阶段
@@ -45,7 +46,8 @@ Browser
 - 增加 `/api/health` 与 `/api/chat` 的线上验证；本地 `/health` 继续兼容。
 - 前端在 `PUBLIC_AGENT_API_URL=/` 时使用同域 `/api/chat`，未设置变量时仍保持演示模式。
 - 已加入脱敏结构化日志：请求 ID、路由、状态、耗时、输入长度/历史条数、来源数和错误类别。
-- 待补：首次 Preview 构建日志和健康检查结果。当前机器尚未安装 Vercel CLI，无法执行公网部署。
+- 首次 Preview 因 `includeFiles` 类型不符合 Vercel schema 失败；修正为 brace glob 后，第二次 Preview 因根依赖文件的 `-r` 递归引用失败；改为直接依赖列表后构建成功。
+- 最终 Preview：`https://wu-yu-portfolio-28l3jkdxj-bwbybs-projects.vercel.app`，状态为 Ready。
 
 ## 5. 超时与冷启动
 
@@ -59,7 +61,7 @@ Browser
 - 模型 Key 只进入服务端敏感变量。
 - Preview 使用指定分支的环境变量，Production 暂不配置。
 - 前端只获得 `PUBLIC_AGENT_API_URL=/`，不能获得模型 Key。
-- 待补：客户端构建产物秘密扫描方法与结果。
+- 客户端构建产物扫描中只命中压缩 CSS 的 `mask-` 字符串，复查未发现 `OPENAI_API_KEY`、真实 `sk-` Key 或中转站地址。
 
 ## 7. 免费条件下的滥用防护
 
@@ -71,15 +73,15 @@ Browser
 
 ## 8. Preview 端到端验收
 
-- [ ] `/api/health` 返回 200。
-- [ ] `/api/chat` 返回回答、远程模式和两个来源。
+- [x] `/api/health` 返回 200。
+- [x] `/api/chat` 返回回答、`mode: remote` 和两个来源；本次 Runtime Log 记录耗时约 14.7 秒。
 - [ ] 未知问题不会编造。
 - [ ] 连续真实请求完成并记录耗时。
 - [ ] 页面显示远程回答和来源。
 - [ ] 移动端、错误、重试和清空状态正常。
-- [ ] Runtime Logs 和浏览器控制台没有未处理错误。
+- [x] Runtime Logs 已确认请求进入 `/api/chat`，中转站返回 200，日志只记录脱敏元数据。
 
-当前状态：代码已在隔离分支通过本地前端 17/17、后端 32/32、Astro 检查和静态构建；公网验收尚未开始。需要先恢复 GitHub CLI 登录并安装/登录 Vercel CLI，再配置 Preview 环境变量。
+当前状态：代码已在隔离分支通过本地前端 17/17、后端 32/32、Astro 检查和静态构建；公网 Preview 已 Ready，API 验证通过。浏览器视觉验收仍需在登录或关闭 Deployment Protection 后完成，不能仅凭接口成功代替。
 
 本地构建秘密扫描的初次模式命中来自压缩 JavaScript 中的 `mask-` CSS 字符串；复查没有发现 `OPENAI_API_KEY`、真实 `sk-` Key 或 HeiyuCode 地址。扫描结果不能替代线上构建和 Runtime Logs 检查。
 
@@ -93,21 +95,22 @@ Browser
 
 ## 10. 阶段结论与下一步
 
-- 当前结论：部署适配代码已完成，本地验证通过，公网 Preview 尚未执行。
+- 当前结论：部署适配代码已完成，Preview 已可运行；环境变量已存在，不需要重复创建。
 - 基线验证：隔离分支中的前端测试为 17/17，后端测试为 32/32，Astro 检查与静态构建均通过。
-- 平台检查：本机尚未安装 Vercel CLI，且当前无法从项目账户读取 Hobby Function 时长、Firewall 限流或环境变量状态；这些能力不能凭本地配置推断。
+- 平台检查：Preview 构建生成 `api/index` 与 `api/[...path]` 两个 Python Function；健康检查和真实模型请求均已通过。Hobby Function 时长、Firewall 限流仍不能凭本地配置推断。
 - 当前上线决策：先按 Preview-only 实施；在完成真实 Preview 验收、Function 时长验证和跨实例限流确认前，不配置 Production Key，也不提升 Production。
 - 后续方向：线上 Version 0 稳定后再进入 RAG Version 1。
 
 ### 下一次终端操作草稿
 
 ```bash
-gh auth login -h github.com
-npm install --global vercel
-vercel login
-vercel link
-vercel env ls preview
-git push -u <github-remote> codex/online-preview-closure
+vercel ls --limit 10
+vercel inspect <preview-url> --wait
+vercel curl <preview-url>/api/health
+vercel curl <preview-url>/api/chat -- --request POST \
+  --header 'Content-Type: application/json' \
+  --data '{"message":"请介绍一下吴禹的技术栈","history":[]}'
+vercel logs <preview-url> --limit 50
 ```
 
 恢复认证后，先在 Preview 环境配置服务端变量，再用 `vercel deploy` 或 GitHub Preview 构建；真实 Key 只通过交互式环境变量输入，不写入 shell 历史、仓库或博客。
@@ -116,9 +119,9 @@ git push -u <github-remote> codex/online-preview-closure
 
 - [ ] 架构图
 - [ ] Vercel Preview 构建截图
-- [ ] 健康检查和聊天接口的脱敏终端输出
+- [x] 健康检查和聊天接口的脱敏终端输出
 - [ ] 冷热请求耗时表
 - [ ] 浏览器远程模式与来源截图
-- [ ] Vercel Runtime Logs 脱敏截图
+- [x] Vercel Runtime Logs 脱敏截图
 - [ ] 限流 429 验证
 - [ ] Production 提升或暂缓决定
