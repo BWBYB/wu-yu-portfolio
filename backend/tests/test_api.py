@@ -207,6 +207,14 @@ def test_provider_failure_log_contains_category_without_raw_error(monkeypatch, c
     async def raise_model_error(messages, settings):
         raise ModelUnavailableError("provider raw response that must stay private")
 
+    monkeypatch.setattr(
+        main,
+        "retrieve_chunks",
+        lambda question, chunks: (
+            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
+        ),
+        raising=False,
+    )
     monkeypatch.setattr(main, "generate_answer", raise_model_error)
     caplog.set_level(logging.INFO, logger="agent.request")
 
