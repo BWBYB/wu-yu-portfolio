@@ -153,11 +153,7 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
 
 
 def test_chat_returns_empty_sources_when_retrieval_finds_nothing(monkeypatch) -> None:
-    async def fake_generate_answer(messages, settings):
-        return "资料中没有足够信息"
-
     monkeypatch.setattr(main, "retrieve_chunks", lambda question, chunks: (), raising=False)
-    monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
 
     response = client.post("/api/chat", json={"message": "未收录的问题"})
 
