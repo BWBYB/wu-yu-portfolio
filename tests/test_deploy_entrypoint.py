@@ -20,4 +20,4 @@ def test_vercel_function_includes_backend_and_knowledge_files() -> None:
 
     function = config["functions"]["api/index.py"]
     assert function["maxDuration"] == 60
-    assert function["includeFiles"] == ["backend/**", "knowledge/**"]
+    assert function["includeFiles"] == "{backend/**,knowledge/**}"
