@@ -55,8 +55,14 @@ describe('remote knowledge-base adapter', () => {
 		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
 	});
 
-	it('rejects a remote response without a non-empty answer and source list', async () => {
-		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '   ', mode: 'remote' }), { status: 200 }));
+	it('rejects a remote response with a blank answer', async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '   ', sources: ['个人资料'], mode: 'remote' }), { status: 200 }));
+
+		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
+	});
+
+	it('rejects a remote response without a source list', async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '有效回答', mode: 'remote' }), { status: 200 }));
 
 		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
 	});

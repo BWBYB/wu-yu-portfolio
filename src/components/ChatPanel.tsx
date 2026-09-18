@@ -40,7 +40,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 			setError('这次回答没有生成成功，请重试。');
 			setFailedQuestion(trimmed);
 		} finally {
-			setIsLoading(false);
+			if (conversationVersion.current === requestVersion) setIsLoading(false);
 		}
 	}
 
@@ -62,6 +62,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		setInput('');
 		setError(null);
 		setFailedQuestion(null);
+		setIsLoading(false);
 	}
 
 	return (

@@ -66,19 +66,31 @@ describe('ChatPanel', () => {
 		expect(await screen.findByText('你在学习什么？')).toBeVisible();
 	});
 
-	it('keeps a cleared conversation empty when an earlier request finishes', async () => {
+	it('allows a new question immediately after clearing an in-flight request', async () => {
 		const user = userEvent.setup();
-		let finishRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
+		let finishOldRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
+		let finishNewRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
 		mockedAsk.mockImplementationOnce(() => new Promise((resolve) => {
-			finishRequest = resolve;
+			finishOldRequest = resolve;
+		}));
+		mockedAsk.mockImplementationOnce(() => new Promise((resolve) => {
+			finishNewRequest = resolve;
 		}));
 		render(<ChatPanel recommendedPrompts={['你是谁？']} />);
 
 		await user.click(screen.getByRole('button', { name: /你是谁/ }));
 		await user.click(screen.getByRole('button', { name: /清空对话/ }));
-		finishRequest({ answer: '旧回答', mode: 'demo', sources: ['个人资料'] });
+		expect(screen.getByText(/还没有问题/)).toBeVisible();
+		expect(screen.getByRole('button', { name: /你是谁/ })).toBeEnabled();
 
-		await waitFor(() => expect(screen.getByText(/还没有问题/)).toBeVisible());
+		await user.click(screen.getByRole('button', { name: /你是谁/ }));
+		finishOldRequest({ answer: '旧回答', mode: 'demo', sources: ['个人资料'] });
+		await waitFor(() => expect(screen.getByText(/正在整理回答/)).toBeVisible());
+		expect(screen.queryByText('旧回答')).not.toBeInTheDocument();
+
+		finishNewRequest({ answer: '新回答', mode: 'demo', sources: ['个人资料'] });
+		await waitFor(() => expect(screen.getByText('新回答')).toBeVisible());
+
 		expect(screen.queryByText('旧回答')).not.toBeInTheDocument();
 	});
 });
