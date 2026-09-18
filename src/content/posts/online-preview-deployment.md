@@ -81,6 +81,8 @@ Browser
 
 当前状态：代码已在隔离分支通过本地前端 17/17、后端 32/32、Astro 检查和静态构建；公网验收尚未开始。需要先恢复 GitHub CLI 登录并安装/登录 Vercel CLI，再配置 Preview 环境变量。
 
+本地构建秘密扫描的初次模式命中来自压缩 JavaScript 中的 `mask-` CSS 字符串；复查没有发现 `OPENAI_API_KEY`、真实 `sk-` Key 或 HeiyuCode 地址。扫描结果不能替代线上构建和 Runtime Logs 检查。
+
 ## 9. 是否提升到 Production
 
 - 免费 Function 时长能否稳定覆盖真实请求。
