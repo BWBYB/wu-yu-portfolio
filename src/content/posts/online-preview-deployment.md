@@ -76,13 +76,13 @@ Browser
 
 - [x] `/api/health` 返回 200。
 - [x] `/api/chat` 相关问题返回 `mode: remote`、`SPMTrack 项目资料`，命中 3 个片段；本次 Runtime Log 记录耗时约 9.7 秒。
-- [ ] 未知问题命中 0 个片段、后端直接返回固定边界回答，不调用模型。
+- [x] 未知问题命中 0 个片段、后端直接返回固定边界回答，不调用模型；Runtime Log 耗时约 1.52ms，未出现中转站请求。
 - [ ] 连续真实请求完成并记录耗时。
 - [ ] 页面显示远程回答和来源。
 - [ ] 移动端、错误、重试和清空状态正常。
 - [x] Runtime Logs 已确认请求进入 `/api/chat`，中转站返回 200，日志只记录脱敏元数据。
 
-当前状态：代码已在隔离分支通过本地前端 17/17、后端与部署入口 40/40、检索测试 4/4、Astro 检查和静态构建；公网 Preview 已 Ready，相关问题和 Runtime Logs 验收通过；未知问题的确定性短路修复待重新部署后复验。浏览器视觉验收仍需在登录或关闭 Deployment Protection 后完成，不能仅凭接口成功代替。
+当前状态：代码已在隔离分支通过本地前端 17/17、后端与部署入口 41/41、检索测试 4/4、Astro 检查和静态构建；公网 Preview 已 Ready，相关问题、未知问题和 Runtime Logs 验收通过。浏览器视觉验收仍需在登录或关闭 Deployment Protection 后完成，不能仅凭接口成功代替。
 
 本地构建秘密扫描的初次模式命中来自压缩 JavaScript 中的 `mask-` CSS 字符串；复查没有发现 `OPENAI_API_KEY`、真实 `sk-` Key 或 HeiyuCode 地址。扫描结果不能替代线上构建和 Runtime Logs 检查。
 
@@ -96,7 +96,7 @@ Browser
 
 ## 10. 阶段结论与下一步
 
-- 当前结论：部署适配代码已完成，Preview 已可运行；环境变量已存在，不需要重复创建。线上验收发现无命中问题仍调用模型，已在本分支加入确定性短路修复，待重新部署验证。
+- 当前结论：部署适配代码已完成，Preview 已可运行；环境变量已存在，不需要重复创建。线上验收发现无命中问题仍调用模型，已加入确定性短路修复并在 commit `f988c72` 的 Preview 验证通过。
 - 基线验证：隔离分支中的前端测试为 17/17，后端与部署入口测试为 40/40，另有 4 个检索测试；Astro 检查与静态构建均通过。
 - 平台检查：Preview 构建生成 `api/index` 与 `api/[...path]` 两个 Python Function；健康检查和真实模型请求均已通过。Hobby Function 时长、Firewall 限流仍不能凭本地配置推断。
 - 当前上线决策：先按 Preview-only 实施；在完成真实 Preview 验收、Function 时长验证和跨实例限流确认前，不配置 Production Key，也不提升 Production。
