@@ -165,6 +165,23 @@ def test_chat_returns_empty_sources_when_retrieval_finds_nothing(monkeypatch) ->
     assert response.json()["sources"] == []
 
 
+def test_chat_short_circuits_without_retrieved_context(monkeypatch) -> None:
+    async def fail_generate_answer(messages, settings):
+        raise AssertionError("the model must not be called without retrieved context")
+
+    monkeypatch.setattr(main, "retrieve_chunks", lambda question, chunks: (), raising=False)
+    monkeypatch.setattr(main, "generate_answer", fail_generate_answer)
+
+    response = client.post("/api/chat", json={"message": "未收录的问题"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "answer": "已整理的资料中没有关于这个问题的信息，暂时无法确定。",
+        "sources": [],
+        "mode": "remote",
+    }
+
+
 def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, caplog) -> None:
     async def fake_generate_answer(messages, settings):
         return "不会出现在日志里的回答"
@@ -205,6 +222,14 @@ def test_missing_model_configuration_returns_stable_503(monkeypatch) -> None:
     async def raise_configuration_error(messages, settings):
         raise ConfigurationError("provider secret details")
 
+    monkeypatch.setattr(
+        main,
+        "retrieve_chunks",
+        lambda question, chunks: (
+            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
+        ),
+        raising=False,
+    )
     monkeypatch.setattr(main, "generate_answer", raise_configuration_error)
 
     response = client.post("/api/chat", json={"message": "测试"})
@@ -218,6 +243,14 @@ def test_model_failure_returns_stable_502(monkeypatch) -> None:
     async def raise_model_error(messages, settings):
         raise ModelUnavailableError("provider response details")
 
+    monkeypatch.setattr(
+        main,
+        "retrieve_chunks",
+        lambda question, chunks: (
+            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
+        ),
+        raising=False,
+    )
     monkeypatch.setattr(main, "generate_answer", raise_model_error)
 
     response = client.post("/api/chat", json={"message": "测试"})

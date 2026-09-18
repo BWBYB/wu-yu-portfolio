@@ -94,6 +94,12 @@ async def chat(
     selected_sources = list(dict.fromkeys(chunk.source for chunk in selected_chunks))
     http_request.state.retrieved_chunks = len(selected_chunks)
     http_request.state.retrieved_sources_count = len(selected_sources)
+    if not selected_chunks:
+        return ChatResponse(
+            answer="已整理的资料中没有关于这个问题的信息，暂时无法确定。",
+            sources=[],
+            mode="remote",
+        )
     messages = build_messages(
         question=request.message,
         history=request.history,
