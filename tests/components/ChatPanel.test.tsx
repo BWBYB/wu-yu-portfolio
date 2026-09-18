@@ -65,4 +65,20 @@ describe('ChatPanel', () => {
 		fireEvent.keyDown(input, { key: 'Enter' });
 		expect(await screen.findByText('你在学习什么？')).toBeVisible();
 	});
+
+	it('keeps a cleared conversation empty when an earlier request finishes', async () => {
+		const user = userEvent.setup();
+		let finishRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
+		mockedAsk.mockImplementationOnce(() => new Promise((resolve) => {
+			finishRequest = resolve;
+		}));
+		render(<ChatPanel recommendedPrompts={['你是谁？']} />);
+
+		await user.click(screen.getByRole('button', { name: /你是谁/ }));
+		await user.click(screen.getByRole('button', { name: /清空对话/ }));
+		finishRequest({ answer: '旧回答', mode: 'demo', sources: ['个人资料'] });
+
+		await waitFor(() => expect(screen.getByText(/还没有问题/)).toBeVisible());
+		expect(screen.queryByText('旧回答')).not.toBeInTheDocument();
+	});
 });

@@ -30,6 +30,19 @@ describe('remote knowledge-base adapter', () => {
 		});
 	});
 
+	it('limits remote request history to the backend limit', async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '远程回答', sources: ['个人资料'], mode: 'remote' }), { status: 200 }));
+		const longHistory = Array.from({ length: 10 }, (_, index) => ({
+			role: index % 2 === 0 ? 'user' as const : 'assistant' as const,
+			content: `消息 ${index + 1}`,
+		}));
+
+		await askKnowledgeBase('新问题', longHistory);
+
+		const request = JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body));
+		expect(request.history).toEqual(longHistory.slice(-8));
+	});
+
 	it('rejects non-2xx responses', async () => {
 		vi.mocked(fetch).mockResolvedValue(new Response('service unavailable', { status: 503 }));
 
@@ -38,6 +51,12 @@ describe('remote knowledge-base adapter', () => {
 
 	it('rejects malformed response payloads', async () => {
 		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '缺少 mode', sources: [] }), { status: 200 }));
+
+		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
+	});
+
+	it('rejects a remote response without a non-empty answer and source list', async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '   ', mode: 'remote' }), { status: 200 }));
 
 		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/Invalid agent response/);
 	});

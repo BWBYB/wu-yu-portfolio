@@ -2,14 +2,17 @@ import { getDemoResponse } from './demo';
 import type { AgentMessage, AgentResponse } from './types';
 
 const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_HISTORY_MESSAGES = 8;
 
 function isValidRemoteResponse(value: unknown): value is AgentResponse {
 	if (!value || typeof value !== 'object') return false;
 	const response = value as Record<string, unknown>;
 	return (
 		typeof response.answer === 'string' &&
+		response.answer.trim().length > 0 &&
 		response.mode === 'remote' &&
-		(response.sources === undefined || (Array.isArray(response.sources) && response.sources.every((source) => typeof source === 'string')))
+		Array.isArray(response.sources) &&
+		response.sources.every((source) => typeof source === 'string')
 	);
 }
 
@@ -27,7 +30,7 @@ async function askRemote(question: string, history: AgentMessage[], baseUrl: str
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				message: question,
-				history: history.map(({ role, content }) => ({ role, content })),
+				history: history.slice(-MAX_HISTORY_MESSAGES).map(({ role, content }) => ({ role, content })),
 			}),
 			signal: controller.signal,
 		});

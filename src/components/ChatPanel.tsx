@@ -1,5 +1,5 @@
 import { RotateCcw, Send, Trash2 } from 'lucide-react';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { askKnowledgeBase } from '@/lib/agent/client';
 import type { AgentMessage } from '@/lib/agent/types';
 
@@ -15,6 +15,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
+	const conversationVersion = useRef(0);
 
 	const hasMessages = messages.length > 0;
 	const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
@@ -28,11 +29,14 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		setError(null);
 		setFailedQuestion(null);
 		setIsLoading(true);
+		const requestVersion = conversationVersion.current;
 
 		try {
 			const result = await askKnowledgeBase(trimmed, history);
+			if (conversationVersion.current !== requestVersion) return;
 			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
 		} catch {
+			if (conversationVersion.current !== requestVersion) return;
 			setError('这次回答没有生成成功，请重试。');
 			setFailedQuestion(trimmed);
 		} finally {
@@ -53,6 +57,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 	}
 
 	function clearConversation() {
+		conversationVersion.current += 1;
 		setMessages([]);
 		setInput('');
 		setError(null);
