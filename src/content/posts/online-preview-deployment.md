@@ -48,6 +48,7 @@ Browser
 - 已加入脱敏结构化日志：请求 ID、路由、状态、耗时、输入长度/历史条数、来源数和错误类别。
 - 首次 Preview 因 `includeFiles` 类型不符合 Vercel schema 失败；修正为 brace glob 后，第二次 Preview 因根依赖文件的 `-r` 递归引用失败；改为直接依赖列表后构建成功。
 - 最终 Preview：`https://wu-yu-portfolio-28l3jkdxj-bwbybs-projects.vercel.app`，状态为 Ready。
+- Agent V1 在现有 Preview 代码上增加了无依赖的片段检索：先按标题和段落切分资料，再只把命中片段放进 Prompt；`sources` 不再固定返回全部资料。
 
 ## 5. 超时与冷启动
 
@@ -96,10 +97,10 @@ Browser
 ## 10. 阶段结论与下一步
 
 - 当前结论：部署适配代码已完成，Preview 已可运行；环境变量已存在，不需要重复创建。
-- 基线验证：隔离分支中的前端测试为 17/17，后端测试为 32/32，Astro 检查与静态构建均通过。
+- 基线验证：隔离分支中的前端测试为 17/17，后端与部署入口测试为 40/40，另有 4 个检索测试；Astro 检查与静态构建均通过。
 - 平台检查：Preview 构建生成 `api/index` 与 `api/[...path]` 两个 Python Function；健康检查和真实模型请求均已通过。Hobby Function 时长、Firewall 限流仍不能凭本地配置推断。
 - 当前上线决策：先按 Preview-only 实施；在完成真实 Preview 验收、Function 时长验证和跨实例限流确认前，不配置 Production Key，也不提升 Production。
-- 后续方向：线上 Version 0 稳定后再进入 RAG Version 1。
+- 后续方向：先完成 Agent V1 Preview 的相关问题、未知问题和日志验收，再扩充资料，最后评估 Embedding、ChromaDB 和 LangChain。
 
 ### 下一次终端操作草稿
 
