@@ -19,6 +19,7 @@ pnpm-debug.log*
 
 # local planning scratch files
 .superpowers/
+.worktrees/
 
 # macOS-specific files
 .DS_Store
