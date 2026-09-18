@@ -24,9 +24,13 @@ class FakeClient:
 
     def __init__(self, **kwargs):
         self.constructor_kwargs = kwargs
+        self.closed = False
         self.chat = type("Chat", (), {})()
         self.chat.completions = FakeCompletions(self.response, self.error)
         self.__class__.instances.append(self)
+
+    async def close(self):
+        self.closed = True
 
 
 def response_with_content(content):
@@ -71,6 +75,7 @@ def test_generate_answer_extracts_and_strips_model_text(fake_client):
         "model": "test-model",
         "messages": [{"role": "user", "content": "hello"}],
     }
+    assert client.closed is True
 
 
 def test_generate_answer_rejects_missing_api_key(monkeypatch):
