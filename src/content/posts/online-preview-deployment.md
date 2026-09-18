@@ -35,8 +35,8 @@ Browser
   -> HeiyuCode Responses API
 ```
 
-- 待补：Vercel 部署适配文件与路由说明。
-- 待补：为什么不在浏览器中直接调用模型。
+- 部署适配文件为 `api/index.py` 与 `vercel.json`，由入口复用已有 FastAPI app，并显式包含资料文件。
+- 浏览器不直连模型，因为 Key 必须留在服务端，且同域 Function 可以统一错误和日志边界。
 
 ## 4. 部署适配阶段
 
@@ -93,8 +93,8 @@ Browser
 
 ## 10. 阶段结论与下一步
 
-- 当前结论：架构与实施计划已批准，部署代码仍待实现。
-- 基线验证：隔离分支中的前端测试为 16/16，后端测试为 27/27，Astro 检查与静态构建均通过。
+- 当前结论：部署适配代码已完成，本地验证通过，公网 Preview 尚未执行。
+- 基线验证：隔离分支中的前端测试为 17/17，后端测试为 32/32，Astro 检查与静态构建均通过。
 - 平台检查：本机尚未安装 Vercel CLI，且当前无法从项目账户读取 Hobby Function 时长、Firewall 限流或环境变量状态；这些能力不能凭本地配置推断。
 - 当前上线决策：先按 Preview-only 实施；在完成真实 Preview 验收、Function 时长验证和跨实例限流确认前，不配置 Production Key，也不提升 Production。
 - 后续方向：线上 Version 0 稳定后再进入 RAG Version 1。
