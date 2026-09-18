@@ -25,9 +25,13 @@ def test_vercel_function_includes_backend_and_knowledge_files() -> None:
 
 
 def test_root_requirements_delegates_to_backend_requirements() -> None:
-    assert Path("requirements.txt").read_text(encoding="utf-8").strip() == (
-        "-r backend/requirements.txt"
-    )
+    requirements = Path("requirements.txt").read_text(encoding="utf-8").splitlines()
+    assert requirements == [
+        "fastapi>=0.115,<1",
+        "httpx>=0.27,<1",
+        "openai>=1.66,<2",
+        "pydantic-settings>=2.6,<3",
+    ]
 
 
 def test_vercel_catch_all_entrypoint_exports_the_existing_app() -> None:
