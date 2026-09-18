@@ -1,4 +1,4 @@
-from app.knowledge import load_knowledge
+from app.knowledge import KnowledgeChunk, build_chunks, load_knowledge
 from app.models import ChatMessage
 from app.prompts import build_messages
 
@@ -12,22 +12,36 @@ def test_load_knowledge_returns_the_two_verified_sources() -> None:
     assert "SPMTrack" in documents[1].content
 
 
-def test_build_messages_contains_corpus_and_grounding_rule() -> None:
-    documents = load_knowledge()
+def test_build_messages_contains_only_selected_chunks() -> None:
+    selected = (
+        KnowledgeChunk("个人资料:0", "个人资料", "技术栈", "React、FastAPI"),
+    )
 
     messages = build_messages(
-        question="你做过什么项目？",
+        question="你的技术栈是什么？",
         history=[],
-        documents=documents,
+        chunks=selected,
         max_history=8,
     )
 
     assert messages[0]["role"] == "system"
-    assert "2026 届" in messages[0]["content"]
-    assert "SPMTrack" in messages[0]["content"]
+    assert "React、FastAPI" in messages[0]["content"]
+    assert "SPMTrack" not in messages[0]["content"]
     assert "information is unavailable" in messages[0]["content"].lower()
     assert "do not speculate" in messages[0]["content"].lower()
-    assert messages[-1] == {"role": "user", "content": "你做过什么项目？"}
+    assert messages[-1] == {"role": "user", "content": "你的技术栈是什么？"}
+
+
+def test_build_messages_preserves_grounding_rule_without_matches() -> None:
+    messages = build_messages(
+        question="你最喜欢什么颜色？",
+        history=[],
+        chunks=(),
+        max_history=8,
+    )
+
+    assert "React" not in messages[0]["content"]
+    assert "information is unavailable" in messages[0]["content"].lower()
 
 
 def test_build_messages_caps_history_at_explicit_limit() -> None:
@@ -40,7 +54,7 @@ def test_build_messages_caps_history_at_explicit_limit() -> None:
     messages = build_messages(
         question="当前问题",
         history=history,
-        documents=load_knowledge(),
+        chunks=build_chunks(tuple(load_knowledge())),
         max_history=2,
     )
 

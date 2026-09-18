@@ -1,22 +1,24 @@
-from app.knowledge import KnowledgeDocument
+from app.knowledge import KnowledgeChunk
 from app.models import ChatMessage
 
 
 def build_messages(
     question: str,
     history: list[ChatMessage],
-    documents: list[KnowledgeDocument],
+    chunks: tuple[KnowledgeChunk, ...],
     max_history: int,
 ) -> list[dict[str, str]]:
-    corpus = "\n\n".join(
-        f"[Source: {document.source}]\n{document.content.strip()}"
-        for document in documents
+    context = "\n\n".join(
+        f"[Source: {chunk.source}]\n[Section: {chunk.heading or '未标注'}]\n{chunk.content.strip()}"
+        for chunk in chunks
     )
+    if not context:
+        context = "(No matching verified context was retrieved.)"
     system_content = (
-        "You are a personal knowledge-base assistant. Answer using only the verified corpus below. "
-        "If the information is unavailable in the corpus, say that it is unavailable and do not speculate. "
-        "Keep answers faithful to the source documents.\n\n"
-        f"Verified corpus:\n{corpus}"
+        "You are a personal knowledge-base assistant. Answer using only the verified context below. "
+        "If the information is unavailable in the context, say that it is unavailable and do not speculate. "
+        "Keep answers faithful to the source documents and cite the available source names when relevant.\n\n"
+        f"Retrieved context:\n{context}"
     )
     bounded_history = history[-max_history:] if max_history > 0 else []
     return [
