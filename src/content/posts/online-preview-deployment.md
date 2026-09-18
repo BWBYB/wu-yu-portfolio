@@ -42,8 +42,10 @@ Browser
 
 - 复用现有 FastAPI app，不复制业务代码。
 - 显式打包 `backend/app/**` 与 `knowledge/**`。
-- 增加 `/api/health` 与 `/api/chat` 的线上验证。
-- 待补：首次 Preview 构建日志和健康检查结果。
+- 增加 `/api/health` 与 `/api/chat` 的线上验证；本地 `/health` 继续兼容。
+- 前端在 `PUBLIC_AGENT_API_URL=/` 时使用同域 `/api/chat`，未设置变量时仍保持演示模式。
+- 已加入脱敏结构化日志：请求 ID、路由、状态、耗时、输入长度/历史条数、来源数和错误类别。
+- 待补：首次 Preview 构建日志和健康检查结果。当前机器尚未安装 Vercel CLI，无法执行公网部署。
 
 ## 5. 超时与冷启动
 
@@ -77,6 +79,8 @@ Browser
 - [ ] 移动端、错误、重试和清空状态正常。
 - [ ] Runtime Logs 和浏览器控制台没有未处理错误。
 
+当前状态：代码已在隔离分支通过本地前端 17/17、后端 32/32、Astro 检查和静态构建；公网验收尚未开始。需要先恢复 GitHub CLI 登录并安装/登录 Vercel CLI，再配置 Preview 环境变量。
+
 ## 9. 是否提升到 Production
 
 - 免费 Function 时长能否稳定覆盖真实请求。
@@ -92,6 +96,19 @@ Browser
 - 平台检查：本机尚未安装 Vercel CLI，且当前无法从项目账户读取 Hobby Function 时长、Firewall 限流或环境变量状态；这些能力不能凭本地配置推断。
 - 当前上线决策：先按 Preview-only 实施；在完成真实 Preview 验收、Function 时长验证和跨实例限流确认前，不配置 Production Key，也不提升 Production。
 - 后续方向：线上 Version 0 稳定后再进入 RAG Version 1。
+
+### 下一次终端操作草稿
+
+```bash
+gh auth login -h github.com
+npm install --global vercel
+vercel login
+vercel link
+vercel env ls preview
+git push -u <github-remote> codex/online-preview-closure
+```
+
+恢复认证后，先在 Preview 环境配置服务端变量，再用 `vercel deploy` 或 GitHub Preview 构建；真实 Key 只通过交互式环境变量输入，不写入 shell 历史、仓库或博客。
 
 ## 写作素材清单
 
