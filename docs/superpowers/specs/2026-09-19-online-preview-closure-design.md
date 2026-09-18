@@ -1,6 +1,6 @@
 # 个人知识库 Agent 线上预发布闭环设计
 
-日期：2026-09-19  
+日期：2026-09-19
 状态：对话中已批准总体架构，等待书面设计审核
 
 ## 1. 背景与目标
@@ -279,4 +279,3 @@ Production 提升必须由用户明确批准。提升后重新执行健康检查
 - Vercel Function Duration：<https://vercel.com/docs/functions/configuring-functions/duration>
 - Vercel Preview 与 Production 提升：<https://vercel.com/docs/deployments/promote-preview-to-production>
 - Vercel 环境变量：<https://vercel.com/docs/environment-variables/manage-across-environments>
-
