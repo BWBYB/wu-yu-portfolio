@@ -28,24 +28,23 @@ async def generate_answer(
     if settings.openai_base_url:
         client_kwargs["base_url"] = settings.openai_base_url
 
-    client = None
     try:
         client = AsyncOpenAI(**client_kwargs)
-        response = await client.chat.completions.create(
-            model=settings.openai_model,
-            messages=messages,
-        )
-        answer = _extract_text(response)
-        if not answer:
-            raise ModelUnavailableError("model unavailable")
-        return answer.strip()
+        try:
+            response = await client.chat.completions.create(
+                model=settings.openai_model,
+                messages=messages,
+            )
+            answer = _extract_text(response)
+            if not answer:
+                raise ModelUnavailableError("model unavailable")
+            return answer.strip()
+        finally:
+            await client.close()
     except ModelUnavailableError:
         raise
     except Exception as error:
         raise ModelUnavailableError("model unavailable") from error
-    finally:
-        if client is not None:
-            await client.close()
 
 
 def _extract_text(response: Any) -> str:

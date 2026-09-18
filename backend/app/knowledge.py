@@ -9,8 +9,8 @@ class KnowledgeDocument:
 
 
 _DOCUMENTS = (
-    ("profile", "knowledge/profile.md"),
-    ("spmtrack", "knowledge/spmtrack.md"),
+    ("个人资料", "knowledge/profile.md"),
+    ("SPMTrack 项目资料", "knowledge/spmtrack.md"),
 )
 
 

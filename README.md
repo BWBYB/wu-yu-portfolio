@@ -86,7 +86,7 @@ cd backend
 ```json
 {
   "answer": "SPMTrack 由 React 工作台、Spring Boot 网关、FastAPI 推理服务和跟踪引擎组成。",
-  "sources": ["profile", "spmtrack"],
+  "sources": ["个人资料", "SPMTrack 项目资料"],
   "mode": "remote"
 }
 ```

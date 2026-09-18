@@ -6,7 +6,7 @@ from app.prompts import build_messages
 def test_load_knowledge_returns_the_two_verified_sources() -> None:
     documents = load_knowledge()
 
-    assert [document.source for document in documents] == ["profile", "spmtrack"]
+    assert [document.source for document in documents] == ["个人资料", "SPMTrack 项目资料"]
     assert all(document.content.strip() for document in documents)
     assert "2026 届" in documents[0].content
     assert "SPMTrack" in documents[1].content

@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
 from app import main
+from app.knowledge import KnowledgeDocument
 from app.main import app
 from app.models import ChatResponse
 from app.llm import ConfigurationError, ModelUnavailableError
@@ -89,7 +90,10 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     captured = {}
 
     def fake_load_knowledge():
-        return ["profile-doc", "spmtrack-doc"]
+        return [
+            KnowledgeDocument(source="个人资料", content="profile-doc"),
+            KnowledgeDocument(source="SPMTrack 项目资料", content="spmtrack-doc"),
+        ]
 
     def fake_build_messages(question, history, documents, max_history):
         captured.update(
@@ -119,7 +123,7 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "answer": "来自知识库的回答",
-        "sources": ["profile", "spmtrack"],
+        "sources": ["个人资料", "SPMTrack 项目资料"],
         "mode": "remote",
     }
     assert captured["question"] == "我是谁？"

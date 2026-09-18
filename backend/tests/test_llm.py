@@ -21,6 +21,7 @@ class FakeClient:
     instances = []
     response = None
     error = None
+    close_error = None
 
     def __init__(self, **kwargs):
         self.constructor_kwargs = kwargs
@@ -31,6 +32,8 @@ class FakeClient:
 
     async def close(self):
         self.closed = True
+        if self.close_error is not None:
+            raise self.close_error
 
 
 def response_with_content(content):
@@ -48,6 +51,7 @@ def fake_client(monkeypatch):
     FakeClient.instances = []
     FakeClient.response = response_with_content("  model answer  ")
     FakeClient.error = None
+    FakeClient.close_error = None
     monkeypatch.setattr(llm, "AsyncOpenAI", FakeClient)
     return FakeClient
 
@@ -105,4 +109,15 @@ def test_generate_answer_maps_provider_exception_without_leaking_text(fake_clien
         __import__("asyncio").run(generate_answer([], settings))
 
     assert "provider secret response" not in str(error.value)
+    assert fake_client.instances[0].closed is True
+
+
+def test_generate_answer_maps_client_cleanup_failure(fake_client):
+    fake_client.close_error = RuntimeError("cleanup secret response")
+    settings = Settings(openai_api_key="test-key")
+
+    with pytest.raises(ModelUnavailableError, match="model unavailable") as error:
+        __import__("asyncio").run(generate_answer([], settings))
+
+    assert "cleanup secret response" not in str(error.value)
     assert fake_client.instances[0].closed is True

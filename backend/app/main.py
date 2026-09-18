@@ -49,6 +49,6 @@ async def chat(
 
     return ChatResponse(
         answer=answer,
-        sources=["profile", "spmtrack"],
+        sources=[document.source for document in documents],
         mode="remote",
     )

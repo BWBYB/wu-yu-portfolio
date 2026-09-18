@@ -28,6 +28,7 @@ describe('ChatPanel', () => {
 
 		expect(await screen.findByText(/React/)).toBeVisible();
 		expect(screen.getByText(/演示模式/)).toBeVisible();
+		expect(screen.getByText(/SPMTrack 项目资料/)).toBeVisible();
 	});
 
 	it('does not submit empty input and can clear the conversation', async () => {
@@ -50,6 +51,7 @@ describe('ChatPanel', () => {
 		mockedAsk.mockResolvedValueOnce({ answer: '我是吴禹。', mode: 'demo', sources: ['个人资料'] });
 		await user.click(screen.getByRole('button', { name: /重试/ }));
 		await waitFor(() => expect(screen.getByText('我是吴禹。')).toBeVisible());
+		expect(mockedAsk).toHaveBeenNthCalledWith(2, '你是谁？', []);
 	});
 
 	it('submits typed questions with Enter and allows Shift+Enter for a newline', async () => {

@@ -19,10 +19,10 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 	const hasMessages = messages.length > 0;
 	const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
 
-	async function submitQuestion(question: string) {
+	async function submitQuestion(question: string, history: AgentMessage[] = messages) {
 		const trimmed = question.trim();
 		if (!trimmed || isLoading) return;
-		const nextHistory: AgentMessage[] = [...messages, { role: 'user', content: trimmed }];
+		const nextHistory: AgentMessage[] = [...history, { role: 'user', content: trimmed }];
 		setMessages(nextHistory);
 		setInput('');
 		setError(null);
@@ -30,7 +30,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		setIsLoading(true);
 
 		try {
-			const result = await askKnowledgeBase(trimmed, messages);
+			const result = await askKnowledgeBase(trimmed, history);
 			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
 		} catch {
 			setError('这次回答没有生成成功，请重试。');
@@ -97,7 +97,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 			{error && (
 				<div className="chat-panel__error" role="alert">
 					<span>{error}</span>
-					{failedQuestion && <button className="text-button" type="button" onClick={() => void submitQuestion(failedQuestion)}><RotateCcw size={14} aria-hidden="true" /> 重试</button>}
+					{failedQuestion && <button className="text-button" type="button" onClick={() => void submitQuestion(failedQuestion, messages.slice(0, -1))}><RotateCcw size={14} aria-hidden="true" /> 重试</button>}
 				</div>
 			)}
 
