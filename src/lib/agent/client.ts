@@ -25,7 +25,8 @@ async function askRemote(question: string, history: AgentMessage[], baseUrl: str
 	}, REQUEST_TIMEOUT_MS);
 
 	try {
-		const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/chat`, {
+		const normalizedBaseUrl = baseUrl === '/' ? '' : baseUrl.replace(/\/+$/, '');
+		const response = await fetch(`${normalizedBaseUrl}/api/chat`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({

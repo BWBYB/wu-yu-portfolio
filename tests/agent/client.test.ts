@@ -30,6 +30,14 @@ describe('remote knowledge-base adapter', () => {
 		});
 	});
 
+	it('uses the same-origin chat route for the Preview root URL', async () => {
+		vi.stubEnv('PUBLIC_AGENT_API_URL', '/');
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '同域回答', sources: ['个人资料'], mode: 'remote' }), { status: 200 }));
+
+		await expect(askKnowledgeBase('问题', [])).resolves.toEqual({ answer: '同域回答', sources: ['个人资料'], mode: 'remote' });
+		expect(fetch).toHaveBeenCalledWith('/api/chat', expect.objectContaining({ method: 'POST' }));
+	});
+
 	it('limits remote request history to the backend limit', async () => {
 		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ answer: '远程回答', sources: ['个人资料'], mode: 'remote' }), { status: 200 }));
 		const longHistory = Array.from({ length: 10 }, (_, index) => ({

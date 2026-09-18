@@ -46,6 +46,8 @@ PUBLIC_AGENT_API_URL=http://localhost:8000 npm run dev
 
 也可以将仓库根目录的 `.env.example` 复制为本地 `.env`。将 `PUBLIC_AGENT_API_URL` 留空会明确保持演示模式。
 
+Vercel Preview/Production 使用同一个项目中的 Python Function 时，将该变量设置为 `/`，浏览器会请求同域的 `/api/chat`，不会把模型地址暴露到客户端。
+
 ### Version 0 后端
 
 后端需要 Python 3.11 或更高版本。首次运行时，在仓库根目录执行：
@@ -74,7 +76,7 @@ cd backend
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
-健康检查位于 `GET http://localhost:8000/health`。它不调用模型，也不要求 API Key。
+健康检查位于 `GET http://localhost:8000/health` 或 `GET http://localhost:8000/api/health`。它不调用模型，也不要求 API Key。
 
 ### 聊天接口
 
