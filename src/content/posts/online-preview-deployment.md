@@ -47,7 +47,7 @@ Browser
 - 前端在 `PUBLIC_AGENT_API_URL=/` 时使用同域 `/api/chat`，未设置变量时仍保持演示模式。
 - 已加入脱敏结构化日志：请求 ID、路由、状态、耗时、输入长度/历史条数、来源数和错误类别。
 - 首次 Preview 因 `includeFiles` 类型不符合 Vercel schema 失败；修正为 brace glob 后，第二次 Preview 因根依赖文件的 `-r` 递归引用失败；改为直接依赖列表后构建成功。
-- 最终 Preview：`https://wu-yu-portfolio-28l3jkdxj-bwbybs-projects.vercel.app`，状态为 Ready。
+- 最终 Preview：`https://wu-yu-portfolio-6ktcjw0ft-bwbybs-projects.vercel.app`，状态为 Ready。
 - Agent V1 在现有 Preview 代码上增加了无依赖的片段检索：先按标题和段落切分资料，再只把命中片段放进 Prompt；`sources` 不再固定返回全部资料。
 
 ## 5. 超时与冷启动
@@ -75,14 +75,14 @@ Browser
 ## 8. Preview 端到端验收
 
 - [x] `/api/health` 返回 200。
-- [x] `/api/chat` 返回回答、`mode: remote` 和两个来源；本次 Runtime Log 记录耗时约 14.7 秒。
-- [ ] 未知问题不会编造。
+- [x] `/api/chat` 相关问题返回 `mode: remote`、`SPMTrack 项目资料`，命中 3 个片段；本次 Runtime Log 记录耗时约 9.7 秒。
+- [x] 未知问题命中 0 个片段、返回 `sources: []`，模型明确说明资料不足。
 - [ ] 连续真实请求完成并记录耗时。
 - [ ] 页面显示远程回答和来源。
 - [ ] 移动端、错误、重试和清空状态正常。
 - [x] Runtime Logs 已确认请求进入 `/api/chat`，中转站返回 200，日志只记录脱敏元数据。
 
-当前状态：代码已在隔离分支通过本地前端 17/17、后端 32/32、Astro 检查和静态构建；公网 Preview 已 Ready，API 验证通过。浏览器视觉验收仍需在登录或关闭 Deployment Protection 后完成，不能仅凭接口成功代替。
+当前状态：代码已在隔离分支通过本地前端 17/17、后端与部署入口 40/40、检索测试 4/4、Astro 检查和静态构建；公网 Preview 已 Ready，相关问题、未知问题和 Runtime Logs 验收通过。浏览器视觉验收仍需在登录或关闭 Deployment Protection 后完成，不能仅凭接口成功代替。
 
 本地构建秘密扫描的初次模式命中来自压缩 JavaScript 中的 `mask-` CSS 字符串；复查没有发现 `OPENAI_API_KEY`、真实 `sk-` Key 或 HeiyuCode 地址。扫描结果不能替代线上构建和 Runtime Logs 检查。
 
@@ -122,7 +122,7 @@ vercel logs <preview-url> --limit 50
 - [ ] Vercel Preview 构建截图
 - [x] 健康检查和聊天接口的脱敏终端输出
 - [ ] 冷热请求耗时表
-- [ ] 浏览器远程模式与来源截图
+- [ ] 浏览器远程模式与来源截图（Preview Deployment Protection 仍需登录后采集）
 - [x] Vercel Runtime Logs 脱敏截图
 - [ ] 限流 429 验证
 - [ ] Production 提升或暂缓决定
