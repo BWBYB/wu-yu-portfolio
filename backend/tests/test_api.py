@@ -1,3 +1,5 @@
+import logging
+
 from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
@@ -13,6 +15,13 @@ client = TestClient(app)
 
 def test_health_endpoint_returns_ok() -> None:
     response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_api_health_alias_returns_ok() -> None:
+    response = client.get("/api/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
@@ -129,6 +138,40 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     assert captured["question"] == "我是谁？"
     assert captured["history"][0].content == "你好"
     assert captured["max_history"] == 8
+
+
+def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, caplog) -> None:
+    async def fake_generate_answer(messages, settings):
+        return "不会出现在日志里的回答"
+
+    monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
+    caplog.set_level(logging.INFO, logger="agent.request")
+
+    response = client.post("/api/chat", json={"message": "不会出现在日志里的问题"})
+
+    assert response.status_code == 200
+    messages = "\n".join(record.getMessage() for record in caplog.records if record.name == "agent.request")
+    assert '"route": "/api/chat"' in messages
+    assert '"status": 200' in messages
+    assert '"message_length": 11' in messages
+    assert '"history_count": 0' in messages
+    assert "不会出现在日志里的问题" not in messages
+    assert "不会出现在日志里的回答" not in messages
+
+
+def test_provider_failure_log_contains_category_without_raw_error(monkeypatch, caplog) -> None:
+    async def raise_model_error(messages, settings):
+        raise ModelUnavailableError("provider raw response that must stay private")
+
+    monkeypatch.setattr(main, "generate_answer", raise_model_error)
+    caplog.set_level(logging.INFO, logger="agent.request")
+
+    response = client.post("/api/chat", json={"message": "测试失败日志"})
+
+    assert response.status_code == 502
+    messages = "\n".join(record.getMessage() for record in caplog.records if record.name == "agent.request")
+    assert '"error_category": "provider"' in messages
+    assert "provider raw response that must stay private" not in messages
 
 
 def test_missing_model_configuration_returns_stable_503(monkeypatch) -> None:
