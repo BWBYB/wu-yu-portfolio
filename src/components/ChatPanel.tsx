@@ -1,5 +1,5 @@
 import { RotateCcw, Send, Trash2 } from 'lucide-react';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { askKnowledgeBase } from '@/lib/agent/client';
 import type { AgentMessage } from '@/lib/agent/types';
 
@@ -15,28 +15,32 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
+	const conversationVersion = useRef(0);
 
 	const hasMessages = messages.length > 0;
 	const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
 
-	async function submitQuestion(question: string) {
+	async function submitQuestion(question: string, history: AgentMessage[] = messages) {
 		const trimmed = question.trim();
 		if (!trimmed || isLoading) return;
-		const nextHistory: AgentMessage[] = [...messages, { role: 'user', content: trimmed }];
+		const nextHistory: AgentMessage[] = [...history, { role: 'user', content: trimmed }];
 		setMessages(nextHistory);
 		setInput('');
 		setError(null);
 		setFailedQuestion(null);
 		setIsLoading(true);
+		const requestVersion = conversationVersion.current;
 
 		try {
-			const result = await askKnowledgeBase(trimmed, messages);
-			setMessages([...nextHistory, { role: 'assistant', content: result.answer }]);
+			const result = await askKnowledgeBase(trimmed, history);
+			if (conversationVersion.current !== requestVersion) return;
+			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
 		} catch {
+			if (conversationVersion.current !== requestVersion) return;
 			setError('这次回答没有生成成功，请重试。');
 			setFailedQuestion(trimmed);
 		} finally {
-			setIsLoading(false);
+			if (conversationVersion.current === requestVersion) setIsLoading(false);
 		}
 	}
 
@@ -53,10 +57,12 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 	}
 
 	function clearConversation() {
+		conversationVersion.current += 1;
 		setMessages([]);
 		setInput('');
 		setError(null);
 		setFailedQuestion(null);
+		setIsLoading(false);
 	}
 
 	return (
@@ -83,7 +89,12 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 					<div className={`chat-message chat-message--${message.role}`} key={`${message.role}-${index}-${message.content}`}>
 						<span className="chat-message__role">{message.role === 'user' ? '你' : 'WU YU · AGENT'}</span>
 						<p>{message.content}</p>
-						{message.role === 'assistant' && <span className="chat-message__mode">演示模式 · 基于当前整理的资料</span>}
+						{message.role === 'assistant' && (
+							<span className="chat-message__mode">
+								{message.mode === 'remote' ? '远程模式' : '演示模式'}
+								{message.sources?.length ? ` · 来源：${message.sources.join('、')}` : ''}
+							</span>
+						)}
 					</div>
 				))}
 				{isLoading && <div className="chat-message chat-message--assistant chat-message--loading"><span className="chat-message__role">WU YU · AGENT</span><p>正在整理回答<span className="loading-dots" aria-hidden="true">...</span></p></div>}
@@ -92,7 +103,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 			{error && (
 				<div className="chat-panel__error" role="alert">
 					<span>{error}</span>
-					{failedQuestion && <button className="text-button" type="button" onClick={() => void submitQuestion(failedQuestion)}><RotateCcw size={14} aria-hidden="true" /> 重试</button>}
+					{failedQuestion && <button className="text-button" type="button" onClick={() => void submitQuestion(failedQuestion, messages.slice(0, -1))}><RotateCcw size={14} aria-hidden="true" /> 重试</button>}
 				</div>
 			)}
 

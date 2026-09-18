@@ -28,6 +28,7 @@ describe('ChatPanel', () => {
 
 		expect(await screen.findByText(/React/)).toBeVisible();
 		expect(screen.getByText(/演示模式/)).toBeVisible();
+		expect(screen.getByText(/SPMTrack 项目资料/)).toBeVisible();
 	});
 
 	it('does not submit empty input and can clear the conversation', async () => {
@@ -50,6 +51,7 @@ describe('ChatPanel', () => {
 		mockedAsk.mockResolvedValueOnce({ answer: '我是吴禹。', mode: 'demo', sources: ['个人资料'] });
 		await user.click(screen.getByRole('button', { name: /重试/ }));
 		await waitFor(() => expect(screen.getByText('我是吴禹。')).toBeVisible());
+		expect(mockedAsk).toHaveBeenNthCalledWith(2, '你是谁？', []);
 	});
 
 	it('submits typed questions with Enter and allows Shift+Enter for a newline', async () => {
@@ -62,5 +64,33 @@ describe('ChatPanel', () => {
 		expect(input).toHaveValue('你在学习什么？');
 		fireEvent.keyDown(input, { key: 'Enter' });
 		expect(await screen.findByText('你在学习什么？')).toBeVisible();
+	});
+
+	it('allows a new question immediately after clearing an in-flight request', async () => {
+		const user = userEvent.setup();
+		let finishOldRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
+		let finishNewRequest: (value: { answer: string; mode: 'demo'; sources: string[] }) => void = () => undefined;
+		mockedAsk.mockImplementationOnce(() => new Promise((resolve) => {
+			finishOldRequest = resolve;
+		}));
+		mockedAsk.mockImplementationOnce(() => new Promise((resolve) => {
+			finishNewRequest = resolve;
+		}));
+		render(<ChatPanel recommendedPrompts={['你是谁？']} />);
+
+		await user.click(screen.getByRole('button', { name: /你是谁/ }));
+		await user.click(screen.getByRole('button', { name: /清空对话/ }));
+		expect(screen.getByText(/还没有问题/)).toBeVisible();
+		expect(screen.getByRole('button', { name: /你是谁/ })).toBeEnabled();
+
+		await user.click(screen.getByRole('button', { name: /你是谁/ }));
+		finishOldRequest({ answer: '旧回答', mode: 'demo', sources: ['个人资料'] });
+		await waitFor(() => expect(screen.getByText(/正在整理回答/)).toBeVisible());
+		expect(screen.queryByText('旧回答')).not.toBeInTheDocument();
+
+		finishNewRequest({ answer: '新回答', mode: 'demo', sources: ['个人资料'] });
+		await waitFor(() => expect(screen.getByText('新回答')).toBeVisible());
+
+		expect(screen.queryByText('旧回答')).not.toBeInTheDocument();
 	});
 });
