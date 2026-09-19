@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { askKnowledgeBase } from '@/lib/agent/client';
+import { AgentRequestError, askKnowledgeBase } from '@/lib/agent/client';
 
 describe('remote knowledge-base adapter', () => {
 	const history = [
@@ -55,6 +55,18 @@ describe('remote knowledge-base adapter', () => {
 		vi.mocked(fetch).mockResolvedValue(new Response('service unavailable', { status: 503 }));
 
 		await expect(askKnowledgeBase('问题', [])).rejects.toThrow(/503/);
+	});
+
+	it('preserves the status of a rate-limited response', async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response('rate limited', { status: 429 }));
+
+		try {
+			await askKnowledgeBase('问题', []);
+			expect.fail('expected the request to reject');
+		} catch (error) {
+			expect(error).toBeInstanceOf(AgentRequestError);
+			expect(error).toMatchObject({ status: 429 });
+		}
 	});
 
 	it('rejects malformed response payloads', async () => {

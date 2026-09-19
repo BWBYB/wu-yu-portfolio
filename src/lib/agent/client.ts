@@ -4,6 +4,13 @@ import type { AgentMessage, AgentResponse } from './types';
 const REQUEST_TIMEOUT_MS = 75_000;
 const MAX_HISTORY_MESSAGES = 8;
 
+export class AgentRequestError extends Error {
+	constructor(readonly status: number) {
+		super(`Remote agent request failed with status ${status}`);
+		this.name = 'AgentRequestError';
+	}
+}
+
 function isValidRemoteResponse(value: unknown): value is AgentResponse {
 	if (!value || typeof value !== 'object') return false;
 	const response = value as Record<string, unknown>;
@@ -37,7 +44,7 @@ async function askRemote(question: string, history: AgentMessage[], baseUrl: str
 		});
 
 		if (!response.ok) {
-			throw new Error(`Remote agent request failed with status ${response.status}`);
+			throw new AgentRequestError(response.status);
 		}
 
 		let payload: unknown;
