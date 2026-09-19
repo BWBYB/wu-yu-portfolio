@@ -1,6 +1,6 @@
 import { RotateCcw, Send, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { askKnowledgeBase } from '@/lib/agent/client';
+import { AgentRequestError, askKnowledgeBase } from '@/lib/agent/client';
 import type { AgentMessage } from '@/lib/agent/types';
 
 type ChatPanelProps = {
@@ -35,10 +35,15 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 			const result = await askKnowledgeBase(trimmed, history);
 			if (conversationVersion.current !== requestVersion) return;
 			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
-		} catch {
+		} catch (error) {
 			if (conversationVersion.current !== requestVersion) return;
-			setError('这次回答没有生成成功，请重试。');
-			setFailedQuestion(trimmed);
+			if (error instanceof AgentRequestError && error.status === 429) {
+				setError('请求有点频繁，请稍后再试。');
+				setFailedQuestion(null);
+			} else {
+				setError('这次回答没有生成成功，请重试。');
+				setFailedQuestion(trimmed);
+			}
 		} finally {
 			if (conversationVersion.current === requestVersion) setIsLoading(false);
 		}

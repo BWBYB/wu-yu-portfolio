@@ -2,11 +2,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatPanel from '@/components/ChatPanel';
-import { askKnowledgeBase } from '@/lib/agent/client';
+import { AgentRequestError, askKnowledgeBase } from '@/lib/agent/client';
 
-vi.mock('@/lib/agent/client', () => ({
-	askKnowledgeBase: vi.fn(),
-}));
+vi.mock('@/lib/agent/client', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('@/lib/agent/client')>();
+	return {
+		...actual,
+		askKnowledgeBase: vi.fn(),
+	};
+});
 
 const mockedAsk = vi.mocked(askKnowledgeBase);
 
@@ -52,6 +56,18 @@ describe('ChatPanel', () => {
 		await user.click(screen.getByRole('button', { name: /重试/ }));
 		await waitFor(() => expect(screen.getByText('我是吴禹。')).toBeVisible());
 		expect(mockedAsk).toHaveBeenNthCalledWith(2, '你是谁？', []);
+	});
+
+	it('shows a dedicated rate-limit message without an immediate retry', async () => {
+		const user = userEvent.setup();
+		mockedAsk.mockRejectedValueOnce(new AgentRequestError(429));
+		render(<ChatPanel recommendedPrompts={['你是谁？']} />);
+
+		await user.click(screen.getByRole('button', { name: /你是谁/ }));
+
+		expect(await screen.findByRole('alert')).toHaveTextContent('请求有点频繁，请稍后再试。');
+		expect(screen.queryByRole('button', { name: /重试/ })).not.toBeInTheDocument();
+		expect(screen.getByRole('textbox', { name: /向我的知识库提问/ })).toBeEnabled();
 	});
 
 	it('submits typed questions with Enter and allows Shift+Enter for a newline', async () => {
