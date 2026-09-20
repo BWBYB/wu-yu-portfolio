@@ -3,6 +3,9 @@ dist/
 # generated types
 .astro/
 
+# local evaluation artifacts
+artifacts/evals/
+
 # dependencies
 node_modules/
 backend/.venv/
