@@ -49,6 +49,7 @@ Browser
 - 首次 Preview 因 `includeFiles` 类型不符合 Vercel schema 失败；修正为 brace glob 后，第二次 Preview 因根依赖文件的 `-r` 递归引用失败；改为直接依赖列表后构建成功。
 - 最终 Preview：`https://wu-yu-portfolio-6ktcjw0ft-bwbybs-projects.vercel.app`，状态为 Ready。
 - Agent V1 在现有 Preview 代码上增加了无依赖的片段检索：先按标题和段落切分资料，再只把命中片段放进 Prompt；`sources` 不再固定返回全部资料。
+- Agent V1.1 继续收紧检索边界：低信息实体词不能单独触发命中，常见改写通过可审计别名恢复召回；当前线上版本明确标注为 RAG V1.1，不宣称已使用 Embedding 或 ChromaDB。
 
 ## 5. 超时与冷启动
 
