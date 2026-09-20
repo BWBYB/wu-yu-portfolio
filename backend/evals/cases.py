@@ -32,7 +32,7 @@ class EvaluationCase:
 
 
 def load_cases(path: Path | None = None) -> tuple[EvaluationCase, ...]:
-    case_path = path or (Path(__file__).resolve().parents[2] / "evals" / "cases.json")
+    case_path = path or (Path(__file__).resolve().parent / "cases.json")
     try:
         raw_cases = json.loads(case_path.read_text(encoding="utf-8"))
     except FileNotFoundError as error:

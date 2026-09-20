@@ -2,18 +2,17 @@
 
 ## Status
 
-Complete. Commit: `9127aa6a27dfee7190429a419ea42dc080d0a898`
+Complete. Initial commit: `4905aec10df65acc17436f2fb519c08aaef1a0cc`; review fixes are pending commit.
 
 ## Changed files
 
-- `backend/app/evals/__init__.py`
-- `backend/app/evals/cases.py`
 - `backend/evals/__init__.py`
+- `backend/evals/cases.py`
 - `backend/evals/cases.json`
 - `backend/evals/test_cases.py`
 - `.gitignore`
 
-The loader is exposed from `app.evals.cases`, matching the import contract in the plan. The JSON data and evaluation tests remain under `backend/evals/` as specified.
+The loader is exposed from `evals.cases`, with both implementation and test assets under `backend/evals/`. This matches the plan's file boundary and keeps evaluation-only code outside the production app package.
 
 ## Implementation
 
@@ -62,4 +61,5 @@ Artifact ignore check:
 ## Concerns
 
 - The worktree has no own `backend/.venv`; verification used the existing project environment at `/Users/Admin/Documents/ChatGPT/个人网站/backend/.venv/bin/python`. No dependencies or environment files were changed.
-- The brief lists `backend/evals/cases.py` but its required import is `app.evals.cases`; the implementation follows the import contract by placing the loader at `backend/app/evals/cases.py` and keeps the case asset at `backend/evals/cases.json`.
+- Review fix: the ambiguous import/file contract is resolved in favor of `backend/evals/cases.py` and `evals.cases`.
+- Review fix: `boundary-001` is a real no-match case; the focused tests verify that at least one out-of-scope question returns no retrieved chunks.

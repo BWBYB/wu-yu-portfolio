@@ -1,4 +1,4 @@
-from app.evals.cases import EvaluationCase, load_cases
+from evals.cases import EvaluationCase, load_cases
 
 
 def test_case_file_has_at_least_24_unique_cases_in_all_categories():
@@ -16,11 +16,23 @@ def test_case_file_has_at_least_24_unique_cases_in_all_categories():
 
 
 def test_out_of_scope_case_requires_no_source_and_no_model_call():
-    case = next(case for case in load_cases() if case.category == "out_of_scope")
+    cases = [case for case in load_cases() if case.category == "out_of_scope"]
 
-    assert case.expected_sources == ()
-    assert case.should_answer is False
-    assert case.expected_model_call is False
+    assert cases
+    assert all(case.expected_sources == () for case in cases)
+    assert all(case.required_facts == () for case in cases)
+    assert all(case.should_answer is False for case in cases)
+    assert all(case.expected_model_call is False for case in cases)
+
+
+def test_out_of_scope_set_contains_a_real_no_match_case():
+    from app.knowledge import build_chunks, load_knowledge
+    from app.retrieval import retrieve_chunks
+
+    chunks = build_chunks(tuple(load_knowledge()))
+    out_of_scope = [case for case in load_cases() if case.category == "out_of_scope"]
+
+    assert any(not retrieve_chunks(case.question, chunks) for case in out_of_scope)
 
 
 def test_loader_rejects_missing_required_fields(tmp_path):

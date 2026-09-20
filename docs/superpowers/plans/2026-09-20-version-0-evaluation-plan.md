@@ -40,7 +40,7 @@
 - [ ] **Step 1: Write failing case-loader tests**
 
 ```python
-from app.evals.cases import EvaluationCase, load_cases
+from evals.cases import EvaluationCase, load_cases
 
 
 def test_case_file_has_at_least_24_unique_cases_in_all_categories():

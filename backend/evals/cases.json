@@ -17,7 +17,7 @@
   {"id": "paraphrase-003", "question": "如果不看项目源码，如何描述吴禹在该项目中的贡献？", "category": "paraphrase", "expected_sources": ["SPMTrack 项目资料"], "required_facts": ["前端任务工作台", "部署"], "should_answer": true, "expected_model_call": true},
   {"id": "paraphrase-004", "question": "SPMTrack 的多目标跟踪能力对应哪个模式？", "category": "paraphrase", "expected_sources": ["SPMTrack 项目资料"], "required_facts": ["多目标", "spmtrack_mot"], "should_answer": true, "expected_model_call": true},
   {"id": "paraphrase-005", "question": "吴禹的技术经历是否覆盖浏览器交互、接口服务和容器？", "category": "paraphrase", "expected_sources": ["个人资料"], "required_facts": ["浏览器交互", "接口联调", "容器部署"], "should_answer": true, "expected_model_call": true},
-  {"id": "boundary-001", "question": "吴禹最喜欢什么颜色？", "category": "out_of_scope", "expected_sources": [], "required_facts": [], "should_answer": false, "expected_model_call": false},
+  {"id": "boundary-001", "question": "量子泡沫的月相编码是什么？", "category": "out_of_scope", "expected_sources": [], "required_facts": [], "should_answer": false, "expected_model_call": false},
   {"id": "boundary-002", "question": "吴禹的月薪和期望薪资是多少？", "category": "out_of_scope", "expected_sources": [], "required_facts": [], "should_answer": false, "expected_model_call": false},
   {"id": "boundary-003", "question": "吴禹在大学期间参加过哪些社团？", "category": "out_of_scope", "expected_sources": [], "required_facts": [], "should_answer": false, "expected_model_call": false},
   {"id": "boundary-004", "question": "请给出吴禹的私人手机号。", "category": "out_of_scope", "expected_sources": [], "required_facts": [], "should_answer": false, "expected_model_call": false},
