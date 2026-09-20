@@ -131,7 +131,7 @@ git commit -m "test: add version zero evaluation cases"
 
 **Interfaces:**
 - Produces `FakeProvider` with `calls: list[dict[str, object]]` and an async `generate(messages, settings) -> str` method.
-- Produces `EvaluationResult` with the fields defined in the spec: `id`, `category`, `status_code`, `actual_sources`, `retrieved_chunks`, `model_call_count`, `latency_ms`, `source_hit`, `required_facts_hit`, `required_facts_missing`, `boundary_correct`, and `error`.
+- Produces `EvaluationResult` with the fields defined in the spec: `id`, `category`, `expected_model_call`, `status_code`, `actual_sources`, `retrieved_chunks`, `model_call_count`, `latency_ms`, `source_hit`, `required_facts_hit`, `required_facts_missing`, `boundary_correct`, `retrieval_error`, and `error`.
 - Produces `run_evaluation(cases: tuple[EvaluationCase, ...]) -> tuple[list[EvaluationResult], dict[str, object]]`.
 - Produces `calculate_metrics(results: list[EvaluationResult]) -> dict[str, object]`.
 - Produces a CLI `main(argv: list[str] | None = None) -> int` that writes `artifacts/evals/version-0-results.json` and `docs/evals/version-0-baseline.md`.
@@ -217,11 +217,11 @@ Use `TestClient(app)` and monkeypatch `app.main.generate_answer` only around the
 
 - [ ] **Step 4: Implement result classification**
 
-For every case, collect only sanitized fields. Set `source_hit` to true only when every expected source appears in the response source list; for cases with no expected sources, leave it null. Set `boundary_correct` true only when `should_answer` is false, status is 200, sources are empty, and model call count is zero; otherwise false for an out-of-scope/adversarial case. Match `required_facts` against the deterministic answer text and preserve missing facts explicitly.
+For every case, collect only sanitized fields. Set `source_hit` to true only when every expected source appears in the response source list; for cases with no expected sources, leave it null. Set `boundary_correct` true only when `should_answer` is false, status is 200, sources are empty, and model call count is zero; otherwise false for an out-of-scope/adversarial case. Set `retrieval_error` only when actual and expected source sets are disjoint, or a no-answer boundary case returns a source. Match `required_facts` against the deterministic answer text and preserve missing facts explicitly.
 
 - [ ] **Step 5: Implement aggregate metrics**
 
-Group totals by category. Compute HTTP success rate, source hit rate over cases with expected sources, required-fact coverage over all non-empty fact requirements, out-of-scope refusal rate, no-match model short-circuit rate, retrieval error rate, mean latency, and P95 using `ceil(0.95 * n) - 1` with bounds checking. Return `None` for a ratio with no denominator instead of inventing zero.
+Group totals by category. Compute HTTP success rate, source hit rate over cases with expected sources, required-fact coverage over all non-empty fact requirements, out-of-scope refusal rate, no-match model short-circuit rate over `expected_model_call=false` cases, retrieval error rate, mean latency, and P95 using `ceil(0.95 * n) - 1` with bounds checking. Return `None` for a ratio with no denominator instead of inventing zero.
 
 - [ ] **Step 6: Run focused runner tests and verify GREEN**
 

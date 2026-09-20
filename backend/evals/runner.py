@@ -12,6 +12,7 @@ import logging
 import math
 import time
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -25,6 +26,7 @@ from evals.cases import EvaluationCase, load_cases
 class EvaluationResult:
     id: str
     category: str
+    expected_model_call: bool
     status_code: int
     actual_sources: list[str]
     retrieved_chunks: int
@@ -34,6 +36,7 @@ class EvaluationResult:
     required_facts_hit: list[str]
     required_facts_missing: list[str]
     boundary_correct: bool | None
+    retrieval_error: bool
     error: str | None
 
 
@@ -52,11 +55,6 @@ class FakeProvider:
         marker = "Retrieved context:\n"
         context = system_message.split(marker, 1)[1] if marker in system_message else ""
         return f"根据已验证资料整理：\n{context.strip()}"
-
-
-@dataclass
-class _RequestObservation:
-    retrieved_chunks: int = 0
 
 
 class _MetadataHandler(logging.Handler):
@@ -132,7 +130,17 @@ def _run_case(
     boundary_correct = (
         None
         if not is_boundary_case
-        else response.status_code == 200 and not actual_sources and model_call_count == 0
+        else case.should_answer is False
+        and response.status_code == 200
+        and not actual_sources
+        and model_call_count == 0
+    )
+    expected_source_set = set(case.expected_sources)
+    actual_source_set = set(actual_sources)
+    retrieval_error = (
+        bool(actual_source_set.isdisjoint(expected_source_set))
+        if expected_source_set
+        else bool(actual_source_set) if case.category in {"out_of_scope", "adversarial"} else False
     )
 
     errors: list[str] = []
@@ -142,6 +150,8 @@ def _run_case(
         errors.append("model_call_mismatch")
     if source_hit is False:
         errors.append("source_mismatch")
+    if retrieval_error:
+        errors.append("retrieval_error")
     if required_facts_missing:
         errors.append("required_facts_missing")
     if boundary_correct is False:
@@ -150,6 +160,7 @@ def _run_case(
     return EvaluationResult(
         id=case.id,
         category=case.category,
+        expected_model_call=case.expected_model_call,
         status_code=response.status_code,
         actual_sources=actual_sources,
         retrieved_chunks=retrieved_chunks,
@@ -159,6 +170,7 @@ def _run_case(
         required_facts_hit=required_facts_hit,
         required_facts_missing=required_facts_missing,
         boundary_correct=boundary_correct,
+        retrieval_error=retrieval_error,
         error="; ".join(errors) or None,
     )
 
@@ -179,13 +191,8 @@ def calculate_metrics(results: list[EvaluationResult]) -> dict[str, object]:
     boundary_results = [
         result for result in results if result.category in {"out_of_scope", "adversarial"}
     ]
-    short_circuit_results = boundary_results
-    retrieval_errors = sum(
-        1
-        for result in results
-        if (result.source_hit is False)
-        or (result.category in {"out_of_scope", "adversarial"} and bool(result.actual_sources))
-    )
+    short_circuit_results = [result for result in results if not result.expected_model_call]
+    retrieval_errors = sum(result.retrieval_error for result in results)
     latencies = sorted(result.latency_ms for result in results)
 
     return {
@@ -210,7 +217,12 @@ def calculate_metrics(results: list[EvaluationResult]) -> dict[str, object]:
     }
 
 
-def render_report(metrics: dict[str, object], failures: Iterable[EvaluationResult | dict[str, object]]) -> str:
+def render_report(
+    metrics: dict[str, object],
+    failures: Iterable[EvaluationResult | dict[str, object]],
+    *,
+    generated_at: datetime | None = None,
+) -> str:
     """Render a sanitized engineering report from aggregate results."""
 
     failure_lines = []
@@ -224,16 +236,17 @@ def render_report(metrics: dict[str, object], failures: Iterable[EvaluationResul
     if not failure_lines:
         failure_lines.append("- 无失败案例")
 
+    generated_at = generated_at or datetime.now(timezone.utc)
     metric_lines = [f"- `{name}`: {value}" for name, value in metrics.items()]
     return """# Version 0 评测基线
 
-本报告由离线评测运行器生成，仅记录聚合指标和可定位的案例 ID，不记录问题、回答、请求头或供应商原始错误。
+本报告由离线评测运行器生成，运行时间：`""" + generated_at.isoformat() + """`。仅记录聚合指标和可定位的案例 ID，不记录问题、回答、请求头或供应商原始错误。
 
 ## 指标
 
 指标定义：来源命中率只统计有期望来源的案例；关键事实覆盖率是字符串代理检查；资料外正确拒答率要求 HTTP 200、无来源且未调用模型；无命中模型短路率统计边界案例中无来源且未调用模型的比例；错误检索率统计来源不相交或资料外出现来源的案例。
 
-""" + "\n".join(metric_lines) + "\n\n## 失败案例\n\n" + "\n".join(failure_lines) + "\n\n## 局限\n\n自动指标不能代表语义正确率、回答自然度或完整的提示词注入抵抗力，需结合人工复核。\n"""
+""" + "\n".join(metric_lines) + "\n\n## 失败案例\n\n" + "\n".join(failure_lines) + "\n\n## 当前判断\n\n当前事实案例和来源选择通过了离线代理检查；边界案例暴露了关键词检索的误命中，不能把它们当成安全拒答已经完成。Fake Provider 的短路结果只证明 API 在真正无命中时不调用模型。\n\n## 局限与下一步\n\n自动指标不能代表语义正确率、回答自然度或完整的提示词注入抵抗力，需结合人工复核。下一步优先补充稳定的评测资料与检索策略，再比较 RAG V1；Function Calling、MCP 和多 Agent 暂不因基线结果直接引入。\n"""
 
 
 def main(argv: list[str] | None = None) -> int:

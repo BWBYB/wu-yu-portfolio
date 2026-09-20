@@ -92,6 +92,7 @@ Version 0 已经具备固定 Markdown 资料、轻量关键词检索、命中后
 {
   "id": "spmtrack-001",
   "category": "project_fact",
+  "expected_model_call": true,
   "status_code": 200,
   "actual_sources": ["SPMTrack 项目资料"],
   "retrieved_chunks": 2,
@@ -101,6 +102,7 @@ Version 0 已经具备固定 Markdown 资料、轻量关键词检索、命中后
   "required_facts_hit": ["视觉跟踪", "视频"],
   "required_facts_missing": [],
   "boundary_correct": null,
+  "retrieval_error": false,
   "error": null
 }
 ```
@@ -122,7 +124,7 @@ PYTHONPATH=backend python backend/evals/runner.py
 - **期望来源命中率**：`actual_sources` 包含全部 `expected_sources` 的案例比例，仅适用于有期望来源的案例。
 - **关键事实覆盖率**：实际可观察文本中命中的 `required_facts` 数除以非空 required facts 总数；这是字符串代理指标，不是语义评估。
 - **资料外正确拒答率**：`should_answer=false` 且没有来源、模型未调用、返回 200 固定边界回答的案例比例。
-- **无命中模型短路率**：期望不调用模型且 Fake Provider 调用次数为 0 的案例比例。
+- **无命中模型短路率**：`expected_model_call=false` 且 Fake Provider 调用次数为 0、没有来源的案例比例。
 - **错误检索率**：实际来源与期望来源不相交，或资料外问题出现非空来源的案例比例。
 
 P95 使用排序后的离线耗时列表，索引取 `ceil(0.95 * n) - 1` 并限制在合法范围内。没有足够样本时报告实际样本数，不伪造稳定性结论。
