@@ -15,6 +15,23 @@ def test_case_file_has_at_least_24_unique_cases_in_all_categories():
     }
 
 
+def test_v1_1_case_inventory_has_boundary_and_paraphrase_variants():
+    cases = load_cases()
+    new_ids = {
+        "boundary-006", "boundary-007", "boundary-008", "boundary-009",
+        "adversarial-006", "adversarial-007", "adversarial-008",
+        "paraphrase-006", "paraphrase-007", "paraphrase-008",
+        "project-008", "profile-007",
+    }
+    v1_1 = [case for case in cases if case.id in new_ids]
+
+    assert len(cases) >= 40
+    assert {case.id for case in v1_1} == new_ids
+    assert sum(case.category == "out_of_scope" for case in v1_1) >= 4
+    assert sum(case.category == "adversarial" for case in v1_1) >= 3
+    assert sum(case.category == "paraphrase" for case in v1_1) >= 3
+
+
 def test_out_of_scope_case_requires_no_source_and_no_model_call():
     cases = [case for case in load_cases() if case.category == "out_of_scope"]
 
