@@ -76,6 +76,25 @@ def test_report_contains_only_aggregates_and_case_ids():
     assert "2026-09-20T00:00:00+00:00" in report
 
 
+def test_report_does_not_render_question_or_answer_fields():
+    report = render_report(
+        {"total_cases": 40},
+        [
+            {
+                "id": "boundary-006",
+                "error": "boundary_mismatch",
+                "question": "must-not-appear-question",
+                "answer": "must-not-appear-answer",
+            }
+        ],
+        generated_at=datetime(2026, 9, 20, tzinfo=timezone.utc),
+    )
+
+    assert "boundary-006" in report
+    assert "must-not-appear-question" not in report
+    assert "must-not-appear-answer" not in report
+
+
 def test_metrics_count_boundary_false_positives_in_short_circuit_rate():
     results = [
         _make_result("boundary-ok", 1.0, category="out_of_scope", sources=[], calls=0),
