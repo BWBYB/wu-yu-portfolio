@@ -2,7 +2,7 @@
 
 一个正在从全栈工程走向 AI Agent 的个人作品集网站，使用 Astro、React 与 Tailwind CSS 构建。
 
-网站以求职展示为目标，包含个人介绍、项目经历、博客入口、简历下载，以及支持本地演示与远程轻量检索后端的个人知识库 Agent。
+网站以求职展示为目标，包含个人介绍、项目经历、博客入口、简历下载，以及个人知识库 Agent。线上 Preview 继续使用轻量词法 RAG V1.1；本地开发版本已接入 E5 Embedding 与 ChromaDB 持久化向量检索。
 
 ## 内容
 
@@ -20,6 +20,8 @@
 - Tailwind CSS 4
 - TypeScript
 - Vitest + Testing Library
+- FastAPI + Pydantic Settings
+- Sentence Transformers + ChromaDB
 
 ## 本地运行
 
@@ -48,14 +50,15 @@ PUBLIC_AGENT_API_URL=http://localhost:8000 npm run dev
 
 Vercel Preview/Production 使用同一个项目中的 Python Function 时，将该变量设置为 `/`，浏览器会请求同域的 `/api/chat`，不会把模型地址暴露到客户端。
 
-### Version 0 后端
+### 本地 RAG V2 后端
 
 后端需要 Python 3.11 或更高版本。首次运行时，在仓库根目录执行：
 
 ```bash
 python3 -m venv backend/.venv
-backend/.venv/bin/pip install -r backend/requirements.txt
-cp backend/.env.example backend/.env
+cd backend
+.venv/bin/pip install -r requirements.txt
+cp .env.example .env
 ```
 
 随后编辑 `backend/.env`，至少填写服务端使用的 `OPENAI_API_KEY`。如果中转站提供 OpenAI 兼容接口，同时填写 `OPENAI_BASE_URL`；模型名由 `OPENAI_MODEL` 指定，调用协议由 `OPENAI_API_MODE` 指定。`OPENAI_API_MODE` 支持 `chat_completions` 和 `responses`，默认保持 `chat_completions` 以兼容现有供应商。
@@ -69,12 +72,15 @@ OPENAI_MODEL=gpt-5.5
 OPENAI_API_MODE=responses
 ```
 
-从 `backend/` 目录启动服务：
+默认 `RAG_RETRIEVAL=vector`。首次启动前先在 `backend/` 目录建立本地索引，再启动服务：
 
 ```bash
 cd backend
+.venv/bin/python -m app.index_knowledge
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
+
+Embedding 由本机的 `intfloat/multilingual-e5-small` 完成，不使用 OpenAI API。ChromaDB 索引保存在被 Git 忽略的 `backend/data/chroma/`，更改知识资料后需要重新执行索引命令。`OPENAI_*` 变量只用于检索成功后的答案生成；Embedding 或 ChromaDB 不可用时，后端会回退到现有词法检索。
 
 健康检查位于 `GET http://localhost:8000/health` 或 `GET http://localhost:8000/api/health`。它不调用模型，也不要求 API Key。
 
@@ -108,12 +114,12 @@ cd backend
 
 ## Agent 演进路线
 
-网站现在支持本地演示数据、Version 0 全文 Prompt 后端和 Version 1 轻量检索后端。后续可以按以下顺序演进：
+网站现在支持本地演示数据、线上 RAG V1.1 词法检索，以及本地 RAG V2 向量检索。当前演进边界如下：
 
-1. 使用无依赖词法检索验证文档切分、相关片段选择和未知问题边界
-2. 扩充简历、项目说明和博客资料，并重新建立片段索引
-3. 根据部署需求增加 embeddings 与向量检索
-4. 再评估 ChromaDB、LangChain、限流和更细的来源引用
+1. 线上 Preview 继续使用无依赖词法检索，保持现有部署稳定
+2. 本地使用 E5 + ChromaDB 验证 Embedding、持久化索引、向量召回和词法 fallback
+3. 扩充并审核简历、项目说明和博客资料后，重新建立索引并复跑评测
+4. 本地稳定后再评估是否把向量检索部署到线上；LangChain、LangGraph 和多 Agent 不在本阶段范围内
 
 生产环境中，OpenAI 中转站密钥只放在后端环境变量，不提交到仓库。
 
@@ -123,3 +129,4 @@ cd backend
 - 设计文档：`docs/superpowers/specs/2026-09-16-personal-portfolio-agent-design.md`
 - 网站实施计划：`docs/superpowers/plans/2026-09-16-personal-portfolio-agent-plan.md`
 - Version 0 Agent 实施计划：`docs/superpowers/plans/2026-09-18-version-0-personal-agent-plan.md`
+- 本地 RAG V2 验证记录：`docs/evals/rag-v2-local.md`
