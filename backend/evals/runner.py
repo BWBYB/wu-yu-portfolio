@@ -19,6 +19,7 @@ from typing import Any, Iterable
 from fastapi.testclient import TestClient
 
 from app import main as app_main
+from app.config import Settings, get_settings
 from evals.cases import EvaluationCase, load_cases
 
 
@@ -52,8 +53,12 @@ class FakeProvider:
             (message.get("content", "") for message in messages if message.get("role") == "system"),
             "",
         )
-        marker = "Retrieved context:\n"
-        context = system_message.split(marker, 1)[1] if marker in system_message else ""
+        markers = ("检索到的资料：\n", "Retrieved context:\n")
+        context = ""
+        for marker in markers:
+            if marker in system_message:
+                context = system_message.split(marker, 1)[1]
+                break
         return f"根据已验证资料整理：\n{context.strip()}"
 
 
@@ -80,8 +85,13 @@ def run_evaluation(cases: tuple[EvaluationCase, ...]) -> tuple[list[EvaluationRe
     client = TestClient(app_main.app, raise_server_exceptions=False)
     metadata_handler = _MetadataHandler()
     original_logger_level = app_main.request_logger.level
+    original_settings_override = app_main.app.dependency_overrides.get(get_settings)
     app_main.request_logger.setLevel(logging.INFO)
     app_main.request_logger.addHandler(metadata_handler)
+    app_main.app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None,
+        rag_retrieval="lexical",
+    )
     results: list[EvaluationResult] = []
     original_generate_answer = app_main.generate_answer
     app_main.generate_answer = provider.generate
@@ -92,6 +102,10 @@ def run_evaluation(cases: tuple[EvaluationCase, ...]) -> tuple[list[EvaluationRe
         app_main.generate_answer = original_generate_answer
         app_main.request_logger.removeHandler(metadata_handler)
         app_main.request_logger.setLevel(original_logger_level)
+        if original_settings_override is None:
+            app_main.app.dependency_overrides.pop(get_settings, None)
+        else:
+            app_main.app.dependency_overrides[get_settings] = original_settings_override
         client.close()
 
     return results, calculate_metrics(results)

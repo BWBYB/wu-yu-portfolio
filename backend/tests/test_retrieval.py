@@ -110,3 +110,10 @@ def test_single_system_or_file_word_does_not_trigger_block_rule():
     )
 
     assert retrieve_chunks("系统使用什么文件格式？", chunks)
+
+
+def test_identity_question_retrieves_profile_context(knowledge_chunks):
+    result = retrieve_chunks("你是谁？", knowledge_chunks)
+
+    assert result
+    assert result[0].source == "个人资料"

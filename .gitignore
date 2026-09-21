@@ -9,6 +9,8 @@ artifacts/evals/
 # dependencies
 node_modules/
 backend/.venv/
+backend/data/chroma/
+backend/.model-cache/
 __pycache__/
 *.py[cod]
 

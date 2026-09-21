@@ -10,7 +10,7 @@ tags:
   - Deployment
 ---
 
-> 草稿状态：已完成设计阶段大纲，后续按部署适配、安全配置、Preview 验收和 Production 决策逐段补充。本文不记录真实 API Key、账户信息或完整供应商错误。
+> 草稿状态：已记录部署适配、Preview 验收与本地 RAG V2 实验，后续继续补充 Production 决策。本文不记录真实 API Key、账户信息或完整供应商错误。
 
 ## 1. 为什么快速迭代时仍然需要线上 Preview
 
@@ -102,7 +102,17 @@ Browser
 - 基线验证：隔离分支中的前端测试为 19/19，后端与部署入口测试为 41/41，另有 4 个检索测试；Astro 检查、静态构建和差异检查均通过。
 - 平台检查：Preview 构建生成 `api/index` 与 `api/[...path]` 两个 Python Function；健康检查返回 200，未知问题突发请求前 10 次返回 200、第 11 次返回 429，Firewall Traffic 记录了 `rate-limit`，放行请求没有调用中转站模型。
 - 当前上线决策：继续保持 Preview-only；正式公开前仍需完成浏览器视觉验收、Function 时长观察和供应商额度或余额上限配置，不配置 Production Key，也不提升 Production。
-- 后续方向：先补齐登录后的浏览器远程回答、来源和移动端状态截图，再扩充资料，最后评估 Embedding、ChromaDB 和 LangChain。
+- 后续方向：先在本地稳定 RAG V2，再扩充和审核资料、复跑固定评测；是否部署向量检索到线上单独决策，不把本地结果写成线上能力。
+
+## 11. 本地 RAG V2：E5 + ChromaDB
+
+这一阶段不修改 Preview 或 Production，只在隔离分支验证完整的向量检索链路：Markdown 资料经过现有稳定切片后，使用 `intfloat/multilingual-e5-small` 生成归一化 Embedding，并写入 cosine distance 的 ChromaDB PersistentClient。查询使用 `query: ` 前缀，文档使用 `passage: ` 前缀。
+
+本地默认参数为 `top_k=4`、`max_distance=0.096`，collection 为 `wu_yu_knowledge_v2`。索引保存在被 Git 忽略的 `backend/data/chroma/`，模型缓存、向量值和完整问答均不进入仓库。`OPENAI_*` 只负责检索成功后的答案生成，本地 Embedding 不需要模型 API Key。
+
+检索编排保留了原有词法方案作为故障回退：Embedding 或 ChromaDB 异常时设置 `fallback_used=true` 并使用词法片段；向量查询正常但无命中时直接返回固定边界回答，不用词法检索扩大召回。明确的提示词泄露、编造事实和服务器文件请求在向量查询前阻断。
+
+本地 8 条人工验收只记录聚合结果：4 条事实问题全部由 vector 命中期望来源，2 条资料外问题和 1 条提示词注入请求均为 none 且不提供上下文，1 条人工注入的向量故障成功切换为 lexical fallback。这个结果证明当前固定资料上的主链路可以运行，不代表通用语义正确率，也不代表 ChromaDB 已部署到线上。
 
 ### 下一次终端操作草稿
 
@@ -127,4 +137,5 @@ vercel logs <preview-url> --limit 50
 - [ ] 浏览器远程模式与来源截图（Preview Deployment Protection 仍需登录后采集）
 - [x] Vercel Runtime Logs 脱敏截图
 - [x] 限流 429 验证
+- [x] 本地 RAG V2 索引、向量检索与 fallback 验证
 - [ ] Production 提升或暂缓决定

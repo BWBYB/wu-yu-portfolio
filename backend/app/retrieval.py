@@ -1,7 +1,14 @@
+import asyncio
 import re
+from dataclasses import dataclass
+from functools import lru_cache
+from typing import Literal
 from types import MappingProxyType
 
+from app.config import Settings
+from app.embeddings import EmbeddingError, LocalEmbeddingProvider
 from app.knowledge import KnowledgeChunk
+from app.vector_store import ChromaVectorStore, VectorStoreError, resolve_chroma_path
 
 
 _WORD_PATTERN = re.compile(r"[a-z0-9][a-z0-9_+#.-]*", re.IGNORECASE)
@@ -44,6 +51,8 @@ _LOW_SIGNAL_TOKENS = frozenset(
     }
 )
 _QUERY_ALIASES = MappingProxyType({
+    "你是谁": ("计算机科学", "华侨大学", "毕业生"),
+    "介绍一下你自己": ("计算机科学", "华侨大学", "毕业生"),
     "英语": ("语言能力", "cet-6"),
     "英语水平": ("语言能力", "cet-6"),
     "求职方向": ("寻找", "岗位"),
@@ -70,6 +79,13 @@ _BLOCKED_INTENT_GROUPS = (
         frozenset({"服务器文件", "本地文件", "主机配置", "配置文件", "任意文件"}),
     ),
 )
+
+
+@dataclass(frozen=True)
+class RetrievalResult:
+    chunks: tuple[KnowledgeChunk, ...]
+    mode: Literal["vector", "lexical", "none"]
+    fallback_used: bool
 
 
 def retrieve_chunks(
@@ -106,6 +122,67 @@ def retrieve_chunks(
 
     scored.sort(key=lambda item: (-item[0], item[1]))
     return tuple(chunk for _, _, chunk in scored[:top_k])
+
+
+async def retrieve_relevant_chunks(
+    question: str,
+    chunks: tuple[KnowledgeChunk, ...],
+    settings: Settings,
+) -> RetrievalResult:
+    """Choose vector retrieval locally and fall back to the V1 lexical retriever."""
+    if _is_blocked_request(question):
+        return RetrievalResult((), "none", False)
+
+    if settings.rag_retrieval == "lexical":
+        selected = retrieve_chunks(question, chunks, top_k=settings.vector_top_k)
+        return RetrievalResult(selected, "lexical" if selected else "none", False)
+
+    try:
+        selected = await vector_search(question, chunks, settings)
+    except (EmbeddingError, VectorStoreError):
+        selected = retrieve_chunks(question, chunks, top_k=settings.vector_top_k)
+        return RetrievalResult(selected, "lexical" if selected else "none", True)
+
+    if selected:
+        return RetrievalResult(selected, "vector", False)
+
+    if settings.rag_retrieval == "hybrid":
+        lexical = retrieve_chunks(question, chunks, top_k=settings.vector_top_k)
+        return RetrievalResult(lexical, "lexical" if lexical else "none", True)
+
+    return RetrievalResult((), "none", False)
+
+
+async def vector_search(
+    question: str,
+    chunks: tuple[KnowledgeChunk, ...],
+    settings: Settings,
+) -> tuple[KnowledgeChunk, ...]:
+    provider = await asyncio.to_thread(_get_embedding_provider, settings.embedding_model)
+    store = await asyncio.to_thread(
+        _get_vector_store,
+        settings.chroma_path,
+        settings.vector_collection,
+    )
+    query_embedding = await asyncio.to_thread(provider.embed_query, question)
+    chunks_by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    return await asyncio.to_thread(
+        store.query,
+        query_embedding,
+        chunks_by_id,
+        settings.vector_top_k,
+        settings.vector_max_distance,
+    )
+
+
+@lru_cache(maxsize=4)
+def _get_embedding_provider(model_name: str) -> LocalEmbeddingProvider:
+    return LocalEmbeddingProvider(model_name)
+
+
+@lru_cache(maxsize=4)
+def _get_vector_store(chroma_path: str, collection_name: str) -> ChromaVectorStore:
+    return ChromaVectorStore(resolve_chroma_path(chroma_path), collection_name)
 
 
 def _extract_tokens(text: str) -> tuple[str, ...]:
