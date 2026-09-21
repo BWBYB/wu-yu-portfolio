@@ -12,7 +12,7 @@ from app.knowledge import build_chunks, load_knowledge
 from app.llm import ConfigurationError, ModelUnavailableError, generate_answer
 from app.models import ChatRequest, ChatResponse
 from app.prompts import build_messages
-from app.retrieval import retrieve_chunks
+from app.retrieval import retrieve_relevant_chunks
 
 
 app = FastAPI(title="Wu Yu Personal Knowledge Agent")
@@ -51,6 +51,8 @@ async def log_request_metadata(request: Request, call_next):
             "sources_count": getattr(request.state, "sources_count", None),
             "retrieved_chunks": getattr(request.state, "retrieved_chunks", None),
             "retrieved_sources_count": getattr(request.state, "retrieved_sources_count", None),
+            "retrieval_mode": getattr(request.state, "retrieval_mode", None),
+            "fallback_used": getattr(request.state, "fallback_used", None),
             "error_category": error_category,
         }
         request_logger.info(json.dumps(metadata, ensure_ascii=False, sort_keys=True))
@@ -90,10 +92,13 @@ async def chat(
     documents = load_knowledge()
     http_request.state.sources_count = len(documents)
     chunks = build_chunks(tuple(documents))
-    selected_chunks = retrieve_chunks(request.message, chunks)
+    retrieval = await retrieve_relevant_chunks(request.message, chunks, settings)
+    selected_chunks = retrieval.chunks
     selected_sources = list(dict.fromkeys(chunk.source for chunk in selected_chunks))
     http_request.state.retrieved_chunks = len(selected_chunks)
     http_request.state.retrieved_sources_count = len(selected_sources)
+    http_request.state.retrieval_mode = retrieval.mode
+    http_request.state.fallback_used = retrieval.fallback_used
     if not selected_chunks:
         return ChatResponse(
             answer="已整理的资料中没有关于这个问题的信息，暂时无法确定。",

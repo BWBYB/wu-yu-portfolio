@@ -8,6 +8,7 @@ from app.knowledge import KnowledgeChunk, KnowledgeDocument
 from app.main import app
 from app.models import ChatResponse
 from app.llm import ConfigurationError, ModelUnavailableError
+from app.retrieval import RetrievalResult
 
 
 client = TestClient(app)
@@ -48,9 +49,18 @@ def test_default_message_limit_rejects_2001_chars() -> None:
 def test_custom_settings_limits_are_enforced_at_api_boundary(monkeypatch) -> None:
     custom_settings = Settings(max_message_chars=3, max_history=1)
     app.dependency_overrides[get_settings] = lambda: custom_settings
+
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(
+            chunks=(KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),),
+            mode="vector",
+            fallback_used=False,
+        )
+
     async def fake_generate_answer(messages, settings):
         return "测试回答"
 
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
     try:
         accepted = client.post("/api/chat", json={"message": "abc"})
@@ -110,8 +120,8 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
     def fake_build_chunks(documents):
         return selected
 
-    def fake_retrieve_chunks(question, chunks):
-        return selected
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(selected, "vector", False)
 
     def fake_build_messages(question, history, chunks, max_history):
         captured.update(
@@ -128,7 +138,7 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
 
     monkeypatch.setattr(main, "load_knowledge", fake_load_knowledge)
     monkeypatch.setattr(main, "build_chunks", fake_build_chunks, raising=False)
-    monkeypatch.setattr(main, "retrieve_chunks", fake_retrieve_chunks, raising=False)
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "build_messages", fake_build_messages)
     monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
 
@@ -153,7 +163,10 @@ def test_chat_builds_grounded_messages_and_returns_sources(monkeypatch) -> None:
 
 
 def test_chat_returns_empty_sources_when_retrieval_finds_nothing(monkeypatch) -> None:
-    monkeypatch.setattr(main, "retrieve_chunks", lambda question, chunks: (), raising=False)
+    async def empty_retrieval(question, chunks, settings):
+        return RetrievalResult((), "none", False)
+
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", empty_retrieval)
 
     response = client.post("/api/chat", json={"message": "未收录的问题"})
 
@@ -165,7 +178,10 @@ def test_chat_short_circuits_without_retrieved_context(monkeypatch) -> None:
     async def fail_generate_answer(messages, settings):
         raise AssertionError("the model must not be called without retrieved context")
 
-    monkeypatch.setattr(main, "retrieve_chunks", lambda question, chunks: (), raising=False)
+    async def empty_retrieval(question, chunks, settings):
+        return RetrievalResult((), "none", False)
+
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", empty_retrieval)
     monkeypatch.setattr(main, "generate_answer", fail_generate_answer)
 
     response = client.post("/api/chat", json={"message": "未收录的问题"})
@@ -179,9 +195,17 @@ def test_chat_short_circuits_without_retrieved_context(monkeypatch) -> None:
 
 
 def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, caplog) -> None:
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(
+            chunks=(KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),),
+            mode="vector",
+            fallback_used=False,
+        )
+
     async def fake_generate_answer(messages, settings):
         return "不会出现在日志里的回答"
 
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "generate_answer", fake_generate_answer)
     caplog.set_level(logging.INFO, logger="agent.request")
 
@@ -195,6 +219,8 @@ def test_success_log_contains_metadata_without_question_or_answer(monkeypatch, c
     assert '"history_count": 0' in messages
     assert '"retrieved_chunks":' in messages
     assert '"retrieved_sources_count":' in messages
+    assert '"retrieval_mode": "vector"' in messages
+    assert '"fallback_used": false' in messages
     assert "不会出现在日志里的问题" not in messages
     assert "不会出现在日志里的回答" not in messages
 
@@ -203,14 +229,14 @@ def test_provider_failure_log_contains_category_without_raw_error(monkeypatch, c
     async def raise_model_error(messages, settings):
         raise ModelUnavailableError("provider raw response that must stay private")
 
-    monkeypatch.setattr(
-        main,
-        "retrieve_chunks",
-        lambda question, chunks: (
-            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
-        ),
-        raising=False,
-    )
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(
+            chunks=(KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),),
+            mode="lexical",
+            fallback_used=True,
+        )
+
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "generate_answer", raise_model_error)
     caplog.set_level(logging.INFO, logger="agent.request")
 
@@ -226,14 +252,14 @@ def test_missing_model_configuration_returns_stable_503(monkeypatch) -> None:
     async def raise_configuration_error(messages, settings):
         raise ConfigurationError("provider secret details")
 
-    monkeypatch.setattr(
-        main,
-        "retrieve_chunks",
-        lambda question, chunks: (
-            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
-        ),
-        raising=False,
-    )
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(
+            chunks=(KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),),
+            mode="lexical",
+            fallback_used=True,
+        )
+
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "generate_answer", raise_configuration_error)
 
     response = client.post("/api/chat", json={"message": "测试"})
@@ -247,14 +273,14 @@ def test_model_failure_returns_stable_502(monkeypatch) -> None:
     async def raise_model_error(messages, settings):
         raise ModelUnavailableError("provider response details")
 
-    monkeypatch.setattr(
-        main,
-        "retrieve_chunks",
-        lambda question, chunks: (
-            KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),
-        ),
-        raising=False,
-    )
+    async def fake_retrieve_relevant_chunks(question, chunks, settings):
+        return RetrievalResult(
+            chunks=(KnowledgeChunk("test:0", "测试资料", "测试", "测试上下文"),),
+            mode="lexical",
+            fallback_used=True,
+        )
+
+    monkeypatch.setattr(main, "retrieve_relevant_chunks", fake_retrieve_relevant_chunks)
     monkeypatch.setattr(main, "generate_answer", raise_model_error)
 
     response = client.post("/api/chat", json={"message": "测试"})
