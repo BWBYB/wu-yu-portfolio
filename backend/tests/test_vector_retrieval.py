@@ -1,11 +1,13 @@
 import asyncio
+import threading
 
 import pytest
 
 from app.config import Settings
 from app.embeddings import EmbeddingError
 from app.knowledge import KnowledgeChunk
-from app.retrieval import retrieve_relevant_chunks
+from app.retrieval import retrieve_relevant_chunks, vector_search
+from app.vector_store import VectorStoreError
 
 
 @pytest.fixture
@@ -39,6 +41,23 @@ def test_vector_result_is_used_when_available(monkeypatch, chunks, settings) -> 
 def test_vector_failure_falls_back_to_lexical(monkeypatch, chunks, settings) -> None:
     async def fail_vector_search(question, actual_chunks, actual_settings):
         raise EmbeddingError("local embedding unavailable")
+
+    monkeypatch.setattr("app.retrieval.vector_search", fail_vector_search)
+    monkeypatch.setattr(
+        "app.retrieval.retrieve_chunks",
+        lambda question, actual_chunks, **kwargs: (chunks[0],),
+    )
+
+    result = asyncio.run(retrieve_relevant_chunks("技术栈", chunks, settings))
+
+    assert result.chunks == (chunks[0],)
+    assert result.mode == "lexical"
+    assert result.fallback_used is True
+
+
+def test_vector_store_failure_also_falls_back_to_lexical(monkeypatch, chunks, settings) -> None:
+    async def fail_vector_search(question, actual_chunks, actual_settings):
+        raise VectorStoreError("local vector store unavailable")
 
     monkeypatch.setattr("app.retrieval.vector_search", fail_vector_search)
     monkeypatch.setattr(
@@ -104,3 +123,37 @@ def test_lexical_mode_skips_vector_search(monkeypatch, chunks, settings) -> None
     assert result.chunks == (chunks[0],)
     assert result.mode == "lexical"
     assert result.fallback_used is False
+
+
+def test_vector_components_are_initialized_and_used_off_event_loop(monkeypatch, chunks, settings) -> None:
+    event_loop_thread = threading.get_ident()
+    init_threads = []
+    call_threads = []
+
+    class FakeProvider:
+        def embed_query(self, question):
+            call_threads.append(threading.get_ident())
+            return [0.1, 0.2]
+
+    class FakeStore:
+        def query(self, query_embedding, chunks_by_id, top_k, max_distance):
+            call_threads.append(threading.get_ident())
+            return (chunks[1],)
+
+    def fake_provider(model_name):
+        init_threads.append(threading.get_ident())
+        return FakeProvider()
+
+    def fake_store(chroma_path, collection_name):
+        init_threads.append(threading.get_ident())
+        return FakeStore()
+
+    monkeypatch.setattr("app.retrieval._get_embedding_provider", fake_provider)
+    monkeypatch.setattr("app.retrieval._get_vector_store", fake_store)
+
+    result = asyncio.run(vector_search("项目流程", chunks, settings))
+
+    assert result == (chunks[1],)
+    assert init_threads
+    assert call_threads
+    assert all(thread_id != event_loop_thread for thread_id in init_threads + call_threads)

@@ -149,8 +149,12 @@ async def vector_search(
     chunks: tuple[KnowledgeChunk, ...],
     settings: Settings,
 ) -> tuple[KnowledgeChunk, ...]:
-    provider = _get_embedding_provider(settings.embedding_model)
-    store = _get_vector_store(settings.chroma_path, settings.vector_collection)
+    provider = await asyncio.to_thread(_get_embedding_provider, settings.embedding_model)
+    store = await asyncio.to_thread(
+        _get_vector_store,
+        settings.chroma_path,
+        settings.vector_collection,
+    )
     query_embedding = await asyncio.to_thread(provider.embed_query, question)
     chunks_by_id = {chunk.chunk_id: chunk for chunk in chunks}
     return await asyncio.to_thread(
