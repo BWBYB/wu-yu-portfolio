@@ -53,8 +53,12 @@ class FakeProvider:
             (message.get("content", "") for message in messages if message.get("role") == "system"),
             "",
         )
-        marker = "Retrieved context:\n"
-        context = system_message.split(marker, 1)[1] if marker in system_message else ""
+        markers = ("检索到的资料：\n", "Retrieved context:\n")
+        context = ""
+        for marker in markers:
+            if marker in system_message:
+                context = system_message.split(marker, 1)[1]
+                break
         return f"根据已验证资料整理：\n{context.strip()}"
 
 

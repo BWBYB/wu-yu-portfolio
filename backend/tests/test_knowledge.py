@@ -27,8 +27,8 @@ def test_build_messages_contains_only_selected_chunks() -> None:
     assert messages[0]["role"] == "system"
     assert "React、FastAPI" in messages[0]["content"]
     assert "SPMTrack" not in messages[0]["content"]
-    assert "information is unavailable" in messages[0]["content"].lower()
-    assert "do not speculate" in messages[0]["content"].lower()
+    assert "资料中没有明确记录" in messages[0]["content"]
+    assert "不得使用资料之外的常识补全或猜测" in messages[0]["content"]
     assert messages[-1] == {"role": "user", "content": "你的技术栈是什么？"}
 
 
@@ -41,7 +41,29 @@ def test_build_messages_preserves_grounding_rule_without_matches() -> None:
     )
 
     assert "React" not in messages[0]["content"]
-    assert "information is unavailable" in messages[0]["content"].lower()
+    assert "资料中没有明确记录" in messages[0]["content"]
+
+
+def test_build_messages_defines_website_assistant_identity() -> None:
+    messages = build_messages(
+        question="你是谁？",
+        history=[],
+        chunks=(
+            KnowledgeChunk(
+                "个人资料:0",
+                "个人资料",
+                "基本信息",
+                "吴禹，2026 届华侨大学计算机科学与技术专业毕业生。",
+            ),
+        ),
+        max_history=8,
+    )
+
+    system_content = messages[0]["content"]
+    assert "吴禹个人网站" in system_content
+    assert "个人知识库助手" in system_content
+    assert "不要自称 Codex" in system_content
+    assert "只能根据下面检索到的已核实资料" in system_content
 
 
 def test_build_messages_caps_history_at_explicit_limit() -> None:
