@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     max_history: int = Field(default=8, ge=0)
     max_message_chars: int = Field(default=2000, ge=1)
     llm_timeout_seconds: float = Field(default=30.0, gt=0)
-    rag_retrieval: Literal["vector", "lexical", "hybrid"] = "vector"
+    rag_retrieval: Literal["vector", "lexical", "hybrid"] = "hybrid"
     embedding_model: str = "intfloat/multilingual-e5-small"
     chroma_path: str = "data/chroma"
     vector_collection: str = "wu_yu_knowledge_v2"

@@ -7,7 +7,7 @@ from app.config import Settings
 def test_vector_settings_have_local_retrieval_defaults() -> None:
     settings = Settings(_env_file=None)
 
-    assert settings.rag_retrieval == "vector"
+    assert settings.rag_retrieval == "hybrid"
     assert settings.embedding_model == "intfloat/multilingual-e5-small"
     assert settings.chroma_path == "data/chroma"
     assert settings.vector_collection == "wu_yu_knowledge_v2"

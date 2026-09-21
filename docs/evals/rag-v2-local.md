@@ -37,10 +37,11 @@ cd backend
 ## 检索与 fallback
 
 1. 明确的提示词泄露、编造事实或服务器文件请求先经过现有安全门控，不访问向量组件。
-2. `RAG_RETRIEVAL=vector` 时，本地 E5 生成查询向量，ChromaDB 按 cosine distance 返回阈值内片段。
-3. 向量查询成功但无命中时返回空上下文，`/api/chat` 不调用 LLM。
-4. Embedding 或 ChromaDB 异常时回退到词法检索，并在脱敏日志中记录 `retrieval_mode` 与 `fallback_used`。
-5. 对外响应仍只有 `answer`、`sources` 和 `mode`；其中 `mode=remote` 表示答案由远程 LLM 生成，不表示检索模式。
+2. 默认 `RAG_RETRIEVAL=hybrid`：本地 E5 生成查询向量，ChromaDB 按 cosine distance 返回阈值内片段。
+3. 向量查询有命中时使用 vector；向量无命中时使用现有词法检索，避免短问句被误判为未知。
+4. Embedding 或 ChromaDB 异常时同样回退到词法检索，并在脱敏日志中记录 `retrieval_mode` 与 `fallback_used`。
+5. 词法检索仍保留原有资料外和 blocked 边界，因此回退不会直接把所有相似向量交给 LLM。
+6. 对外响应仍只有 `answer`、`sources` 和 `mode`；其中 `mode=remote` 表示答案由远程 LLM 生成，不表示检索模式。
 
 ## 8 条本地人工验证
 
@@ -53,6 +54,8 @@ cd backend
 | 提示词注入请求 | 1 | 1/1 使用 `none`，0 个片段，向量查询前阻断 |
 | 向量故障 | 1 | 1/1 使用 `lexical`，`fallback_used=true` |
 
+针对实际使用中发现的短问句，又验证了 5 个问题：Docker、身份介绍、SPMTrack 职责、React/FastAPI 选择和当前学习内容均能获得资料上下文；其中向量距离超过严格阈值的问句通过 `lexical` 回退，身份问句通过可审计的查询别名命中个人资料。
+
 ## 自动化证据
 
 - Task 4 检索/API 验收集：52 passed。
@@ -62,7 +65,7 @@ cd backend
 ## 限制与下一步
 
 - 语料只有 2 份文档、8 个 chunk，不能据此证明大规模知识库效果。
-- `max_distance=0.096` 来自当前固定实验；资料扩充后必须重新评估阈值，不能直接沿用。
+- `max_distance=0.096` 仍作为 vector 的严格准入阈值；资料扩充后必须重新评估阈值，不能直接沿用。
 - 当前只完成本地部署，PyTorch、sentence-transformers、模型权重与 ChromaDB 不适合直接塞入现有零成本 Vercel Function。
 - 先补充和审核求职资料，再固定一组更大的评测集，比较召回率、边界正确率、延迟和资源占用。
 - 本地稳定后再独立评估线上托管方案；本阶段不引入 LangChain、LangGraph、MCP 或多 Agent。

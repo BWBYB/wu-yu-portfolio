@@ -110,9 +110,10 @@ async def retrieve_relevant_chunks(
 
 1. 先使用当前词法阻断规则识别明确的编造、提示词泄露和文件越权请求。
 2. 向量检索成功且有结果时使用向量结果。
-3. 向量模型、ChromaDB 或索引不可用时回退 `retrieve_chunks()`。
-4. 向量和词法都没有结果时返回空结果，由现有 API 短路且不调用 LLM。
-5. 不因为向量相似度高就绕过现有资料边界。
+3. 默认 hybrid 模式下，向量无结果时回退 `retrieve_chunks()`；向量模型、ChromaDB 或索引不可用时也回退词法检索。
+4. vector 严格模式下保留“向量无结果不回退”，用于单独评估向量阈值。
+5. 向量和词法都没有结果时返回空结果，由现有 API 短路且不调用 LLM。
+6. 不因为向量相似度高就绕过现有资料边界。
 
 ### `backend/app/index_knowledge.py`
 
@@ -132,7 +133,7 @@ cd backend
 新增配置项：
 
 ```dotenv
-RAG_RETRIEVAL=vector
+RAG_RETRIEVAL=hybrid
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
 CHROMA_PATH=data/chroma
 VECTOR_COLLECTION=wu_yu_knowledge_v2
@@ -141,7 +142,7 @@ VECTOR_MAX_DISTANCE=0.096
 EMBEDDING_TIMEOUT_SECONDS=30
 ```
 
-`RAG_RETRIEVAL` 支持 `vector`、`lexical` 和 `hybrid`。本地默认使用 `vector`，测试可以显式使用 `lexical`。`hybrid` 表示向量优先、失败时词法回退，而不是两个结果无条件合并。
+`RAG_RETRIEVAL` 支持 `vector`、`lexical` 和 `hybrid`。本地默认使用 `hybrid`：向量有命中时优先使用向量，向量无命中或组件异常时回退词法检索；不会无条件合并两套结果。`vector` 可用于严格验证向量阈值，`lexical` 可用于历史基线。
 
 ## API 与日志行为
 

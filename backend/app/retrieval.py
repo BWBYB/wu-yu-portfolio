@@ -51,6 +51,8 @@ _LOW_SIGNAL_TOKENS = frozenset(
     }
 )
 _QUERY_ALIASES = MappingProxyType({
+    "你是谁": ("计算机科学", "华侨大学", "毕业生"),
+    "介绍一下你自己": ("计算机科学", "华侨大学", "毕业生"),
     "英语": ("语言能力", "cet-6"),
     "英语水平": ("语言能力", "cet-6"),
     "求职方向": ("寻找", "岗位"),
@@ -141,7 +143,14 @@ async def retrieve_relevant_chunks(
         selected = retrieve_chunks(question, chunks, top_k=settings.vector_top_k)
         return RetrievalResult(selected, "lexical" if selected else "none", True)
 
-    return RetrievalResult(selected, "vector" if selected else "none", False)
+    if selected:
+        return RetrievalResult(selected, "vector", False)
+
+    if settings.rag_retrieval == "hybrid":
+        lexical = retrieve_chunks(question, chunks, top_k=settings.vector_top_k)
+        return RetrievalResult(lexical, "lexical" if lexical else "none", True)
+
+    return RetrievalResult((), "none", False)
 
 
 async def vector_search(

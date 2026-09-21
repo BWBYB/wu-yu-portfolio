@@ -72,7 +72,7 @@ OPENAI_MODEL=gpt-5.5
 OPENAI_API_MODE=responses
 ```
 
-默认 `RAG_RETRIEVAL=vector`。首次启动前先在 `backend/` 目录建立本地索引，再启动服务：
+默认 `RAG_RETRIEVAL=hybrid`。请求会优先使用本地向量检索；向量无命中或组件不可用时，回退到已验证的词法检索。首次启动前先在 `backend/` 目录建立本地索引，再启动服务：
 
 ```bash
 cd backend

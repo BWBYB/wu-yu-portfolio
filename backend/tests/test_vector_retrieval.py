@@ -5,7 +5,7 @@ import pytest
 
 from app.config import Settings
 from app.embeddings import EmbeddingError
-from app.knowledge import KnowledgeChunk
+from app.knowledge import KnowledgeChunk, build_chunks, load_knowledge
 from app.retrieval import retrieve_relevant_chunks, vector_search
 from app.vector_store import VectorStoreError
 
@@ -89,21 +89,38 @@ def test_blocked_request_never_reaches_vector_search(monkeypatch, chunks, settin
     assert called is False
 
 
-def test_vector_no_match_does_not_call_lexical_fallback(monkeypatch, chunks, settings) -> None:
+def test_hybrid_no_match_falls_back_to_lexical(monkeypatch, chunks, settings) -> None:
     async def empty_vector_search(question, actual_chunks, actual_settings):
         return ()
 
-    def fail_lexical(question, actual_chunks):
-        raise AssertionError("successful vector no-match must not call lexical retrieval")
+    def lexical_result(question, actual_chunks, **kwargs):
+        return (chunks[0],)
 
     monkeypatch.setattr("app.retrieval.vector_search", empty_vector_search)
-    monkeypatch.setattr("app.retrieval.retrieve_chunks", fail_lexical)
+    monkeypatch.setattr("app.retrieval.retrieve_chunks", lexical_result)
 
-    result = asyncio.run(retrieve_relevant_chunks("未收录的问题", chunks, settings))
+    result = asyncio.run(retrieve_relevant_chunks("技术栈", chunks, settings))
 
-    assert result.chunks == ()
-    assert result.mode == "none"
-    assert result.fallback_used is False
+    assert result.chunks == (chunks[0],)
+    assert result.mode == "lexical"
+    assert result.fallback_used is True
+
+
+def test_hybrid_fallback_recovers_grounded_user_questions(monkeypatch, settings) -> None:
+    real_chunks = build_chunks(tuple(load_knowledge()))
+
+    async def empty_vector_search(question, actual_chunks, actual_settings):
+        return ()
+
+    monkeypatch.setattr("app.retrieval.vector_search", empty_vector_search)
+
+    result = asyncio.run(
+        retrieve_relevant_chunks("有没有使用过docker", real_chunks, settings)
+    )
+
+    assert result.mode == "lexical"
+    assert result.fallback_used is True
+    assert {chunk.source for chunk in result.chunks} == {"个人资料"}
 
 
 def test_lexical_mode_skips_vector_search(monkeypatch, chunks, settings) -> None:
