@@ -2,9 +2,15 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
+from app.dify import (
+    DifyConfigurationError,
+    DifyResponseError,
+    DifyUnavailableError,
+    run_chatflow,
+)
 from app.knowledge import load_knowledge
 from app.llm import ConfigurationError, ModelUnavailableError, generate_answer
-from app.models import ChatRequest, ChatResponse
+from app.models import AgentBookRequest, AgentBookResponse, ChatRequest, ChatResponse
 from app.prompts import build_messages
 
 
@@ -51,4 +57,30 @@ async def chat(
         answer=answer,
         sources=[document.source for document in documents],
         mode="remote",
+    )
+
+
+@app.post("/api/agent-book/chat", response_model=AgentBookResponse)
+async def agent_book_chat(
+    request: AgentBookRequest,
+    settings: Settings = Depends(get_settings),
+) -> AgentBookResponse:
+    if len(request.message) > settings.max_message_chars:
+        raise HTTPException(status_code=422, detail="message exceeds configured limit")
+    try:
+        result = await run_chatflow(
+            message=request.message,
+            conversation_id=request.conversation_id,
+            settings=settings,
+        )
+    except DifyConfigurationError as error:
+        raise HTTPException(status_code=503, detail="Agent Book 服务尚未配置") from error
+    except (DifyUnavailableError, DifyResponseError) as error:
+        raise HTTPException(status_code=502, detail="Agent Book 服务暂时不可用") from error
+
+    return AgentBookResponse(
+        answer=result.answer,
+        conversation_id=result.conversation_id,
+        sources=result.sources,
+        mode="dify",
     )

@@ -123,6 +123,9 @@ button { cursor: pointer; }
 .agent-preview__intro h2 { margin: 12px 0 15px; font-family: var(--display); font-size: clamp(34px, 4vw, 53px); line-height: 1; }
 .agent-preview__intro h2 em { color: var(--terracotta); font-style: normal; }
 .agent-preview__intro > p:last-child { max-width: 300px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.75; }
+.agent-book-preview { border-color: #c8d5d1; }
+.agent-book-preview .agent-preview__intro h2 em { color: #467b70; }
+.agent-book-preview .eyebrow { color: #467b70; }
 .chat-panel { min-width: 0; border: 1px solid var(--line); background: var(--paper); }
 .chat-panel__head { display: flex; justify-content: space-between; gap: 16px; align-items: start; padding: 18px 18px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .chat-panel__head h3 { margin: 7px 0 0; font-family: var(--display); font-size: 23px; }

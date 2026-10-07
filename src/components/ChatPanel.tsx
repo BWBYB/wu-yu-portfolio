@@ -1,24 +1,28 @@
 import { RotateCcw, Send, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { askKnowledgeBase } from '@/lib/agent/client';
+import { askAgentBook, askKnowledgeBase } from '@/lib/agent/client';
 import type { AgentMessage } from '@/lib/agent/types';
 
 type ChatPanelProps = {
 	recommendedPrompts?: readonly string[];
+	variant?: 'personal' | 'agent-book';
 };
 
 const defaultPrompts = ['你是谁？', '你在 SPMTrack 里负责什么？', '为什么选择 React 和 FastAPI？', '你目前正在学习什么？'];
 
-export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatPanelProps) {
+export default function ChatPanel({ recommendedPrompts = defaultPrompts, variant = 'personal' }: ChatPanelProps) {
 	const [messages, setMessages] = useState<AgentMessage[]>([]);
 	const [input, setInput] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
+	const [conversationId, setConversationId] = useState<string | null>(null);
 	const conversationVersion = useRef(0);
+	const isAgentBook = variant === 'agent-book';
 
 	const hasMessages = messages.length > 0;
 	const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading]);
+	const questionId = isAgentBook ? 'agent-book-question' : 'knowledge-question';
 
 	async function submitQuestion(question: string, history: AgentMessage[] = messages) {
 		const trimmed = question.trim();
@@ -32,12 +36,14 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		const requestVersion = conversationVersion.current;
 
 		try {
-			const result = await askKnowledgeBase(trimmed, history);
+			const result = isAgentBook ? await askAgentBook(trimmed, conversationId) : await askKnowledgeBase(trimmed, history);
 			if (conversationVersion.current !== requestVersion) return;
+			if (result.mode === 'dify') setConversationId(result.conversation_id);
 			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
-		} catch {
+		} catch (caughtError) {
 			if (conversationVersion.current !== requestVersion) return;
-			setError('这次回答没有生成成功，请重试。');
+			const message = caughtError instanceof Error ? caughtError.message : '这次回答没有生成成功，请重试。';
+			setError(isAgentBook ? message : '这次回答没有生成成功，请重试。');
 			setFailedQuestion(trimmed);
 		} finally {
 			if (conversationVersion.current === requestVersion) setIsLoading(false);
@@ -62,6 +68,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		setInput('');
 		setError(null);
 		setFailedQuestion(null);
+		setConversationId(null);
 		setIsLoading(false);
 	}
 
@@ -69,8 +76,8 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 		<div className="chat-panel">
 			<div className="chat-panel__head">
 				<div>
-					<p className="eyebrow">PERSONAL KNOWLEDGE BASE</p>
-					<h3>和我的资料聊聊</h3>
+					<p className="eyebrow">{isAgentBook ? 'AGENT BOOK / RAG' : 'PERSONAL KNOWLEDGE BASE'}</p>
+					<h3>{isAgentBook ? '和 Agent Book 聊聊' : '和我的资料聊聊'}</h3>
 				</div>
 				<button className="icon-button chat-panel__clear" type="button" aria-label="清空对话" title="清空对话" onClick={clearConversation}>
 					<Trash2 size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -91,7 +98,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 						<p>{message.content}</p>
 						{message.role === 'assistant' && (
 							<span className="chat-message__mode">
-								{message.mode === 'remote' ? '远程模式' : '演示模式'}
+								{message.mode === 'dify' ? 'Agent Book · Dify' : message.mode === 'remote' ? '远程模式' : '演示模式'}
 								{message.sources?.length ? ` · 来源：${message.sources.join('、')}` : ''}
 							</span>
 						)}
@@ -108,8 +115,8 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts }: ChatP
 			)}
 
 			<form className="chat-panel__form" onSubmit={handleSubmit}>
-				<label className="sr-only" htmlFor="knowledge-question">向我的知识库提问</label>
-				<textarea id="knowledge-question" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleInputKeyDown} placeholder="向我的知识库提问..." rows={1} disabled={isLoading} />
+				<label className="sr-only" htmlFor={questionId}>{isAgentBook ? '向 Agent Book 提问' : '向我的知识库提问'}</label>
+				<textarea id={questionId} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={handleInputKeyDown} placeholder={isAgentBook ? '向 Agent Book 提问...' : '向我的知识库提问...'} rows={1} disabled={isLoading} />
 				<button className="send-button" type="submit" aria-label="发送" title="发送" disabled={!canSend}><Send size={16} strokeWidth={1.8} aria-hidden="true" /></button>
 			</form>
 		</div>

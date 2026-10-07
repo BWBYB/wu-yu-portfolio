@@ -2,6 +2,7 @@
 import { ArrowUpRight, Bot } from '@lucide/astro';
 import { getCollection } from 'astro:content';
 import AgentPreview from '../components/AgentPreview';
+import AgentBookPreview from '../components/AgentBookPreview';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { statusLabel } from '../lib/content';
 
@@ -19,6 +20,8 @@ const organizing = projects.filter(({ data }) => data.status === 'organizing');
 	</section>
 
 	<section class="section page-shell" id="agent"><div class="section__header"><div><p class="eyebrow">01 / ASK MY KNOWLEDGE BASE</p><h2 class="section-heading">从一个问题开始。</h2></div><div class="section__header-copy"><p>推荐问题会带你快速了解项目、技术选择、学习方向和校园经历。当前回答为本地演示数据。</p></div></div><AgentPreview client:visible /></section>
+
+	<section class="section page-shell" id="agent-book"><div class="section__header"><div><p class="eyebrow">01B / ASK THE STUDY MATERIAL</p><h2 class="section-heading">再问一份学习资料。</h2></div><div class="section__header-copy"><p>独立的 Agent Book RAG 知识库，当前通过本地 Dify Chatflow 提供问答。</p></div></div><AgentBookPreview client:visible /></section>
 
 	<section class="section page-shell"><div class="section__header"><div><p class="eyebrow">02 / SELECTED WORK</p><h2 class="section-heading">把研究代码，交付成产品。</h2></div><a class="text-link" href="/projects/">查看全部项目 <ArrowUpRight size={15} aria-hidden="true" /></a></div>
 		{featured && <article class="featured-project surface"><div class="featured-project__visual"><div class="project-mark"><span>SPMTRACK / 2025—26</span><span>GRADUATION PROJECT</span></div><div class="project-diagram"><div class="project-diagram__node">React<br />workbench</div><div class="project-diagram__arrow">→</div><div class="project-diagram__node">Spring Boot<br />gateway</div><div class="project-diagram__arrow">→</div><div class="project-diagram__node">FastAPI<br />inference</div><div class="project-diagram__arrow">→</div><div class="project-diagram__node">PyTorch /<br />OpenCV</div></div><div class="project-mark"><span>VIDEO TRACKING WORKSPACE</span><span>01</span></div></div><div class="featured-project__body"><span class="status-label">{statusLabel(featured.data.status)} · {featured.data.category}</span><h3>{featured.data.title}</h3><p>{featured.data.summary}</p><div class="tag-row">{featured.data.tags.slice(0, 5).map((tag) => <span class="tag">{tag}</span>)}</div><a class="text-link" href="/projects/spmtrack/">阅读项目案例 <ArrowUpRight size={15} aria-hidden="true" /></a></div></article>}

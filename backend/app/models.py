@@ -31,3 +31,22 @@ class ChatResponse(BaseModel):
     answer: str
     sources: list[str]
     mode: Literal["remote"]
+
+
+class AgentBookRequest(BaseModel):
+    message: str = Field(min_length=1)
+    conversation_id: str | None = None
+
+    @field_validator("message")
+    @classmethod
+    def reject_blank_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("content must not be blank")
+        return value
+
+
+class AgentBookResponse(BaseModel):
+    answer: str
+    conversation_id: str
+    sources: list[str]
+    mode: Literal["dify"]

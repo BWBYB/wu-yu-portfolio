@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.config import Settings, get_settings
+from app.dify import DifyChatResult, DifyConfigurationError, DifyUnavailableError
 from app import main
 from app.knowledge import KnowledgeDocument
 from app.main import app
@@ -168,3 +169,74 @@ def test_cors_exposes_configured_frontend_origin() -> None:
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:4321"
+
+
+def test_agent_book_chat_returns_dify_answer_and_conversation(monkeypatch) -> None:
+    settings = Settings(
+        dify_base_url="http://dify.local",
+        dify_api_key="test-key",
+        dify_user="test-user",
+    )
+    app.dependency_overrides[get_settings] = lambda: settings
+
+    async def fake_run_chatflow(**kwargs):
+        assert kwargs["message"] == "什么是 Agent？"
+        assert kwargs["conversation_id"] == ""
+        return DifyChatResult(
+            answer="Agent 是能够根据目标采取行动的系统。",
+            conversation_id="conversation-1",
+            sources=["chapter1.md"],
+        )
+
+    monkeypatch.setattr(main, "run_chatflow", fake_run_chatflow)
+    try:
+        response = client.post(
+            "/api/agent-book/chat",
+            json={"message": "什么是 Agent？", "conversation_id": ""},
+        )
+    finally:
+        app.dependency_overrides.pop(get_settings, None)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "answer": "Agent 是能够根据目标采取行动的系统。",
+        "conversation_id": "conversation-1",
+        "sources": ["chapter1.md"],
+        "mode": "dify",
+    }
+
+
+def test_agent_book_chat_maps_configuration_failure_to_503(monkeypatch) -> None:
+    settings = Settings(dify_base_url="http://dify.local", dify_api_key="test-key")
+    app.dependency_overrides[get_settings] = lambda: settings
+
+    async def raise_configuration_error(**kwargs):
+        raise DifyConfigurationError("secret details")
+
+    monkeypatch.setattr(main, "run_chatflow", raise_configuration_error)
+    try:
+        response = client.post("/api/agent-book/chat", json={"message": "测试"})
+    finally:
+        app.dependency_overrides.pop(get_settings, None)
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Agent Book 服务尚未配置"}
+    assert "secret" not in response.text
+
+
+def test_agent_book_chat_maps_dify_failure_to_502(monkeypatch) -> None:
+    settings = Settings(dify_base_url="http://dify.local", dify_api_key="test-key")
+    app.dependency_overrides[get_settings] = lambda: settings
+
+    async def raise_dify_error(**kwargs):
+        raise DifyUnavailableError("provider details")
+
+    monkeypatch.setattr(main, "run_chatflow", raise_dify_error)
+    try:
+        response = client.post("/api/agent-book/chat", json={"message": "测试"})
+    finally:
+        app.dependency_overrides.pop(get_settings, None)
+
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Agent Book 服务暂时不可用"}
+    assert "provider" not in response.text
