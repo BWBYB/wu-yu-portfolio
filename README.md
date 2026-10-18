@@ -46,6 +46,14 @@ PUBLIC_AGENT_API_URL=http://localhost:8000 npm run dev
 
 也可以将仓库根目录的 `.env.example` 复制为本地 `.env`。将 `PUBLIC_AGENT_API_URL` 留空会明确保持演示模式。
 
+### Agent 对话工作台
+
+前端启动后访问 `http://localhost:4321/agent/`。页面内可以在“了解 WU YU”和“AI-Agent-Book”之间切换，并分别保留对话记录。
+
+- `PUBLIC_AGENT_API_URL` 留空时，个人 Agent 使用演示回答；Agent Book 需要后端服务，会提示 API 未配置。
+- 连接本地后端时将它设为 `http://localhost:8000`。Agent Book 由后端加载 `agentbook-rag` 的本地索引，并使用 `backend/.env` 中的 OpenAI 兼容配置生成答案。
+- OpenAI 兼容 API Key 只放在后端 `.env`，不要放入前端变量或提交到 Git。
+
 ### Version 0 后端
 
 后端需要 Python 3.11 或更高版本。首次运行时，在仓库根目录执行：

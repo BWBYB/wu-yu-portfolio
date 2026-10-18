@@ -2,7 +2,7 @@ export type AgentMessage = {
 	role: 'user' | 'assistant';
 	content: string;
 	sources?: string[];
-	mode?: 'demo' | 'remote' | 'dify';
+	mode?: 'demo' | 'remote' | 'local-rag';
 };
 
 export type AgentResponse = {
@@ -15,5 +15,5 @@ export type AgentBookResponse = {
 	answer: string;
 	conversation_id: string;
 	sources: string[];
-	mode: 'dify';
+	mode: 'local-rag';
 };

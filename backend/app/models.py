@@ -49,4 +49,4 @@ class AgentBookResponse(BaseModel):
     answer: str
     conversation_id: str
     sources: list[str]
-    mode: Literal["dify"]
+    mode: Literal["local-rag"]

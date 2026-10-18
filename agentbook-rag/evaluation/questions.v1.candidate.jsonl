@@ -1,0 +1,69 @@
+{"id":"q001","question":"RRF（倒数排名融合）是如何把稠密检索和 BM25 的结果合并起来的？","type":"term","gold_chunk_ids":["book/chapter3.md#24"],"note":"候选；核对 RRF 只使用排名、默认 k=60 的定义；待人工审核"}
+{"id":"q002","question":"BM25 相比最朴素的 TF-IDF，主要修正了哪两个问题？","type":"term","gold_chunk_ids":["book/chapter3.md#20","book/chapter3.md#21"],"note":"候选；需要同时覆盖词频饱和与文档长度归一化；待人工审核"}
+{"id":"q003","question":"稠密检索和稀疏检索各自擅长什么、又分别有什么局限？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#23","book/chapter3.md#24"],"note":"候选；比较语义匹配与精确关键词匹配；待人工审核"}
+{"id":"q004","question":"神经重排序和 RRF 在混合检索流水线中分别负责什么？神经重排序能替代 RRF 吗？","type":"term","gold_chunk_ids":["book/chapter3.md#24","book/chapter3.md#25"],"note":"候选；检查融合与精排的职责边界；待人工审核"}
+{"id":"q005","question":"Agentic RAG 为什么会把知识库检索变成 Agent 可以反复调用的工具？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#40"],"note":"候选；检查固定单轮检索与多轮查询迭代的区别；待人工审核"}
+{"id":"q006","question":"知识库中的间接提示注入是怎么产生的，检索系统应该如何隔离资料和指令？","type":"fact","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#41"],"note":"候选；需要覆盖风险来源和指令/数据分离；待人工审核"}
+{"id":"q007","question":"现代 LLM Agent 的工具调用流程通常分为哪四步？","type":"fact","gold_chunk_ids":["book/chapter1.md#6"],"note":"候选；检查声明工具、模型决策、执行结果回填、再次决策；待人工审核"}
+{"id":"q008","question":"ReAct 循环中 Model、Harness 和 Environment 分别做什么？","type":"fact","gold_chunk_ids":["book/chapter1.md#14"],"note":"候选；检查机制角色划分和循环轨迹；待人工审核"}
+{"id":"q009","question":"确定性工作流和自主 Agent 的主要差异是什么？什么时候自主 Agent 的成本和复合错误风险更高？","type":"multi_hop","gold_chunk_ids":["book/chapter1.md#29","book/chapter1.md#31"],"note":"候选；需要结合工作流限制、自主循环和风险；待人工审核"}
+{"id":"q010","question":"带工具调用的多轮 API 交互为什么必须把完整历史重新发送给模型？","type":"fact","gold_chunk_ids":["book/chapter2.md#5","book/chapter2.md#7"],"note":"候选；结合 API 无状态的原因与完整历史、工具结果回传的机制；待人工审核"}
+{"id":"q011","question":"在 Agent API 请求中，工具定义和四种消息角色是什么关系？","type":"term","gold_chunk_ids":["book/chapter2.md#4"],"note":"候选；检查 tools 顶层字段不是消息角色；待人工审核"}
+{"id":"q012","question":"为什么多跳问题比简单事实问题更可能受益于 Agentic RAG？","type":"multi_hop","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#42"],"note":"候选；检查 Agentic RAG 的迭代检索机制，以及多跳案例中初轮信息不足后进行第二轮聚焦检索；待人工审核"}
+{"id":"q013","question":"Agent = LLM + 上下文 + 工具这个公式中，三者分别承担什么职责？","type":"fact","gold_chunk_ids":["book/chapter1.md#1"],"note":"候选；检查公式中大脑、眼睛、手脚的对应关系；待人工审核"}
+{"id":"q014","question":"什么样的系统才不只是‘你问一句、它答一句’的 Chatbot，而更接近 Agent？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#0"],"note":"候选；用不同措辞考察 Agent 的规划、工具和反馈闭环；待人工审核"}
+{"id":"q015","question":"实现层的 LLM、上下文、工具与学术概念中的 Policy、Observation Space、Action Space 如何对应？","type":"term","gold_chunk_ids":["book/chapter1.md#2"],"note":"候选；检查两套抽象的对应边界；待人工审核"}
+{"id":"q016","question":"Manus 为什么被描述为把 Deep Research、Coding 和 Computer Use 的能力放进同一个 Agent？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#3"],"note":"候选；考察观察空间和动作空间并集的含义；待人工审核"}
+{"id":"q017","question":"书中总结的 Agent 共同特征中，开放式动作空间、内部思考和持续交互分别意味着什么？","type":"fact","gold_chunk_ids":["book/chapter1.md#5"],"note":"候选；检查三种能力的定义；待人工审核"}
+{"id":"q018","question":"用户沟通工具和执行工具的目标有什么区别？","type":"fact","gold_chunk_ids":["book/chapter1.md#6"],"note":"候选；检查传递信息与改变外部世界的边界；待人工审核"}
+{"id":"q019","question":"为什么受限的 Python code interpreter 有时比不断增加专用工具更容易组合，但也会扩大攻击面？","type":"mixed","gold_chunk_ids":["book/chapter1.md#7"],"note":"候选；同时考察工具通用性、组合性和安全代价；待人工审核"}
+{"id":"q020","question":"LLM Agent 的内部思考为什么能帮助它在采取行动前进行规划？","type":"fact","gold_chunk_ids":["book/chapter1.md#8"],"note":"候选；检查预训练能力与内部推演的关系；待人工审核"}
+{"id":"q021","question":"为什么模型能力变强后，Harness 仍然不会立刻变得不重要？","type":"term","gold_chunk_ids":["book/chapter1.md#9"],"note":"候选；检查模型与 Harness 的边界和渐进内化观点；待人工审核"}
+{"id":"q022","question":"上下文适应、外部产物更新和模型参数更新，分别能把变化保留到什么范围？","type":"fact","gold_chunk_ids":["book/chapter1.md#10"],"note":"候选；比较任务内、跨任务和训练周期的持久性；待人工审核"}
+{"id":"q023","question":"工具定义为什么和系统提示词一起构成 Agent 上下文的静态前缀？","type":"fact","gold_chunk_ids":["book/chapter1.md#11"],"note":"候选；检查 tools schema 与前缀稳定性的关系；待人工审核"}
+{"id":"q024","question":"上下文消融实验为什么需要保留完整基线并分别移除其他组件？","type":"fact","gold_chunk_ids":["book/chapter1.md#12"],"note":"候选；检查消融实验的比较逻辑；待人工审核"}
+{"id":"q025","question":"为什么‘模型给出了回答’不一定等于 Agent 已经完成了任务？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#13"],"note":"候选；考察上下文残缺导致的表面正确答案；待人工审核"}
+{"id":"q026","question":"ReAct 的最小循环中，Model、Harness 和 Environment 按什么顺序交互？","type":"code_flow","gold_chunk_ids":["book/chapter1.md#14"],"note":"候选；要求复述轨迹、决策、执行和观察的顺序；待人工审核"}
+{"id":"q027","question":"把 Agent 轨迹结构化保存，除了调试之外还能支持哪些后续用途？","type":"fact","gold_chunk_ids":["book/chapter1.md#16"],"note":"候选；检查轨迹分析、知识沉淀和训练闭环；待人工审核"}
+{"id":"q028","question":"当工具执行在服务端完成时，ReAct 编排循环为什么仍然没有消失？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#17"],"note":"候选；比较客户端与服务端的执行位置和决策循环；待人工审核"}
+{"id":"q029","question":"Freeform Tool Calling 相比传统 JSON 参数工具调用，主要放宽了什么限制？","type":"mixed","gold_chunk_ids":["book/chapter1.md#18"],"note":"候选；检查自由格式工具调用的 API 语义；待人工审核"}
+{"id":"q030","question":"为什么生产级 Agent 需要 Harness 同时负责上下文管理、工具接口和工程保障？","type":"multi_hop","gold_chunk_ids":["book/chapter1.md#20","book/chapter1.md#21"],"note":"候选；需要结合 Model/Environment 边界和约束验证纠正；待人工审核"}
+{"id":"q031","question":"提示工程、上下文工程和 Loop 工程分别在优化 Agent 的哪一层？","type":"term","gold_chunk_ids":["book/chapter1.md#23"],"note":"候选；检查三个工程范式的演进关系；待人工审核"}
+{"id":"q032","question":"ACI 为什么强调从 Agent 的视角设计工具接口，而不是只沿用程序员熟悉的 API 设计？","type":"fact","gold_chunk_ids":["book/chapter1.md#25"],"note":"候选；检查工具命名、参数和误用防护；待人工审核"}
+{"id":"q033","question":"开源模型和闭源模型在成本、私有化与能力方面有哪些典型取舍？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#26"],"note":"候选；考察模型选型而非记忆单个模型名；待人工审核"}
+{"id":"q034","question":"一个任务什么时候更适合确定性工作流，什么时候可以接受自主 Agent 的动态决策？","type":"multi_hop","gold_chunk_ids":["book/chapter1.md#27","book/chapter1.md#28"],"note":"候选；结合任务可预测性、灵活性和结构复杂度；待人工审核"}
+{"id":"q035","question":"确定性工作流相比自主 Agent 的安全优势是什么？","type":"fact","gold_chunk_ids":["book/chapter1.md#29"],"note":"候选；检查固定路径如何限制提示注入和模型错误的影响面；待人工审核"}
+{"id":"q036","question":"自主 Agent 为什么必须设置任务完成、最大迭代次数和不可恢复错误等停止条件？","type":"fact","gold_chunk_ids":["book/chapter1.md#31"],"note":"候选；检查停止条件与死循环风险；待人工审核"}
+{"id":"q037","question":"上下文工程中的‘上下文’具体指模型在一次调用时实际看到的哪些信息？","type":"fact","gold_chunk_ids":["book/chapter2.md#0"],"note":"候选；检查上下文不只是用户当前输入；待人工审核"}
+{"id":"q038","question":"为什么 Agent 框架不能只把当前用户消息交给模型，而要维护更完整的上下文？","type":"fact","gold_chunk_ids":["book/chapter2.md#3"],"note":"候选；检查无状态 API 与历史上下文的关系；待人工审核"}
+{"id":"q039","question":"system、user、assistant、tool 四种消息角色各自表示什么，tools 字段又放在哪里？","type":"term","gold_chunk_ids":["book/chapter2.md#4"],"note":"候选；检查消息角色与工具定义的边界；待人工审核"}
+{"id":"q040","question":"带工具调用的 API 循环在模型没有返回 tool_calls 时为什么可以结束？","type":"code_flow","gold_chunk_ids":["book/chapter2.md#9"],"note":"候选；检查 while 循环的终止条件；待人工审核"}
+{"id":"q041","question":"为什么把动态时间戳插入上下文前缀会破坏 KV Cache 复用？","type":"fact","gold_chunk_ids":["book/chapter2.md#16"],"note":"候选；检查前缀从变化点开始无法复用的原因；待人工审核"}
+{"id":"q042","question":"KV Cache 友好的上下文设计为什么要求稳定前缀、只追加历史和把动态信息放在后面？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter2.md#17"],"note":"候选；综合三条缓存设计原则；待人工审核"}
+{"id":"q043","question":"倒排索引是什么，它为什么适合支持 BM25 的关键词检索？","type":"term","gold_chunk_ids":["book/chapter3.md#22"],"note":"候选；检查从词反查文档的结构；待人工审核"}
+{"id":"q044","question":"混合检索流水线中的并行检索、结果融合和神经重排序分别做什么？","type":"fact","gold_chunk_ids":["book/chapter3.md#24"],"note":"候选；检查三阶段职责；待人工审核"}
+{"id":"q045","question":"双编码器和跨编码器在检索速度、输入方式和相关性判断上有什么差异？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#25"],"note":"候选；对比初筛 embedding 与 Cross-Encoder 精排；待人工审核"}
+{"id":"q046","question":"Recall@k、MRR 和 nDCG 分别想回答检索系统的什么问题？","type":"fact","gold_chunk_ids":["book/chapter3.md#25","book/chapter3.md#26"],"note":"候选；检查召回、首个相关结果和整体排序质量的差异；待人工审核"}
+{"id":"q047","question":"为什么把知识库切成互不关联的扁平文本块，可能无法支持复杂的跨文档问题？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#27"],"note":"候选；检查结构化索引要解决的根本问题；待人工审核"}
+{"id":"q048","question":"索引期的上下文感知检索和运行期的上下文感知压缩，处理对象和发生时机有什么区别？","type":"mixed","gold_chunk_ids":["book/chapter3.md#45"],"note":"候选；检查两个相近术语的边界；待人工审核"}
+{"id":"q049","question":"上下文前缀为什么能让同一个关键词在不同公司、年份或文档中的检索结果更容易区分？","type":"multi_hop","gold_chunk_ids":["book/chapter3.md#45","book/chapter3.md#46"],"note":"候选；结合背景锚定和查询匹配解释效果；待人工审核"}
+{"id":"q050","question":"为什么主动服务需要把常驻的结构化概览和按需召回的原始细节结合起来？","type":"multi_hop","gold_chunk_ids":["book/chapter3.md#44","book/chapter3.md#48"],"note":"候选；检查全局视野与精确细节的互补关系；待人工审核"}
+{"id":"q055","question":"什么是 AI Agent？它和普通聊天机器人有什么不同？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter1.md#0","book/chapter1.md#1"],"note":"候选；宽泛自然问法，检查 Agent 定义、规划、工具和反馈闭环；待人工审核"}
+{"id":"q056","question":"RAG 大概是怎么工作的？从资料到回答会经过哪些步骤？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#13","book/chapter3.md#14"],"note":"候选；宽泛自然问法，检查检索、增强、生成的整体流程；待人工审核"}
+{"id":"q057","question":"RAG 一般分成哪几步？","type":"fact","gold_chunk_ids":["book/chapter3.md#14"],"note":"候选；短问法，检查是否能从模糊表达定位核心流程；待人工审核"}
+{"id":"q058","question":"稠密嵌入和稀疏嵌入有什么区别？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#16","book/chapter3.md#19"],"note":"候选；对应用户可能混用的嵌入/向量化说法；待人工审核"}
+{"id":"q059","question":"向量检索和关键词检索分别适合什么情况？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#16","book/chapter3.md#23"],"note":"候选；宽泛比较，检查语义匹配与精确匹配的优缺点；待人工审核"}
+{"id":"q060","question":"为什么文档要切成一个个小块？chunk 到底是什么？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#14","book/chapter3.md#15"],"note":"候选；口语化问法，检查分块目的和基本策略；待人工审核"}
+{"id":"q061","question":"混合检索到底是在做什么？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#23","book/chapter3.md#24"],"note":"候选；宽泛自然问法，检查并行检索、融合和重排序的整体概念；待人工审核"}
+{"id":"q062","question":"为什么已经有向量检索了，还要再用 BM25？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#23","book/chapter3.md#24"],"note":"候选；因果型自然问法，检查两种检索方式的互补性；待人工审核"}
+{"id":"q063","question":"Agentic RAG 和普通 RAG 有什么区别？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#42"],"note":"候选；宽泛比较，检查固定检索与多轮自主检索的边界；待人工审核"}
+{"id":"q064","question":"Embedding 到底把一段文字变成了什么？","type":"fact","gold_chunk_ids":["book/chapter3.md#15","book/chapter3.md#16"],"note":"候选；口语化术语问法，检查嵌入、向量空间和语义相似度；待人工审核"}
+{"id":"q065","question":"模糊嵌入和集中嵌入有什么区别？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#16","book/chapter3.md#19"],"note":"候选；故意使用非标准术语，意指稠密嵌入和稀疏嵌入；用于测试同义指代；待人工审核"}
+{"id":"q066","question":"语义向量搜索和关键词搜索分别适合什么情况？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#16","book/chapter3.md#23"],"note":"候选；用语义向量搜索指代稠密检索，用关键词搜索指代稀疏检索；待人工审核"}
+{"id":"q067","question":"资料增强问答是怎么把外部文档交给模型回答的？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#13","book/chapter3.md#14"],"note":"候选；使用 RAG 的中文释义和口语化描述，不直接出现缩写；待人工审核"}
+{"id":"q068","question":"会自己多次查资料的 RAG，和只检索一次的 RAG 有什么不同？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#42"],"note":"候选；用行为描述指代 Agentic RAG，用对比问法模拟同义表达；待人工审核"}
+{"id":"q069","question":"文档切片和 chunk 是一回事吗？为什么切片会影响检索效果？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#14","book/chapter3.md#15"],"note":"候选；用切片指代分块，用口语化问法测试 chunking 语义理解；待人工审核"}
+{"id":"q051","question":"这本书是否给出了深圳 2026 届 AI Agent 校招岗位的具体薪资范围？","type":"unanswerable","gold_chunk_ids":[],"note":"候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id":"q052","question":"这本书是否记录了某个具体个人网站的 Vercel 部署域名？","type":"unanswerable","gold_chunk_ids":[],"note":"候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id":"q053","question":"这本书是否给出了作者个人电脑上 Qwen3-Embedding-0.6B 的实际耗时基准？","type":"unanswerable","gold_chunk_ids":[],"note":"候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id":"q054","question":"这本书是否提供了一个可直接登录的在线 Agent Book 问答网站账号？","type":"unanswerable","gold_chunk_ids":[],"note":"候选；资料外问题，后续用于拒答评估；待人工审核"}

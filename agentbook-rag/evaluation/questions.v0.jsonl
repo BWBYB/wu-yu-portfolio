@@ -1,0 +1,12 @@
+{"id":"q001","question":"RRF（倒数排名融合）是如何把稠密检索和 BM25 的结果合并起来的？","type":"term","gold_chunk_ids":["book/chapter3.md#24"],"note":"核对 RRF 只使用排名、默认 k=60 的定义；草稿，待人工复核"}
+{"id":"q002","question":"BM25 相比最朴素的 TF-IDF，主要修正了哪两个问题？","type":"term","gold_chunk_ids":["book/chapter3.md#20","book/chapter3.md#21"],"note":"需要同时覆盖词频饱和与文档长度归一化；草稿，待人工复核"}
+{"id":"q003","question":"稠密检索和稀疏检索各自擅长什么、又分别有什么局限？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#23","book/chapter3.md#24"],"note":"比较语义匹配与精确关键词匹配；草稿，待人工复核"}
+{"id":"q004","question":"神经重排序和 RRF 在混合检索流水线中分别负责什么？神经重排序能替代 RRF 吗？","type":"term","gold_chunk_ids":["book/chapter3.md#24","book/chapter3.md#25"],"note":"检查融合与精排的职责边界；草稿，待人工复核"}
+{"id":"q005","question":"Agentic RAG 为什么会把知识库检索变成 Agent 可以反复调用的工具？","type":"semantic_rewrite","gold_chunk_ids":["book/chapter3.md#40"],"note":"检查固定单轮检索与多轮查询迭代的区别；草稿，待人工复核"}
+{"id":"q006","question":"知识库中的间接提示注入是怎么产生的，检索系统应该如何隔离资料和指令？","type":"fact","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#41"],"note":"需要覆盖风险来源和指令/数据分离；草稿，待人工复核"}
+{"id":"q007","question":"现代 LLM Agent 的工具调用流程通常分为哪四步？","type":"fact","gold_chunk_ids":["book/chapter1.md#6"],"note":"检查声明工具、模型决策、执行结果回填、再次决策；草稿，待人工复核"}
+{"id":"q008","question":"ReAct 循环中 Model、Harness 和 Environment 分别做什么？","type":"fact","gold_chunk_ids":["book/chapter1.md#14"],"note":"检查机制角色划分和循环轨迹；草稿，待人工复核"}
+{"id":"q009","question":"确定性工作流和自主 Agent 的主要差异是什么？什么时候自主 Agent 的成本和复合错误风险更高？","type":"multi_hop","gold_chunk_ids":["book/chapter1.md#29","book/chapter1.md#31"],"note":"需要结合工作流限制、自主循环和风险；草稿，待人工复核"}
+{"id":"q010","question":"带工具调用的多轮 API 交互为什么必须把完整历史重新发送给模型？","type":"fact","gold_chunk_ids":["book/chapter2.md#5","book/chapter2.md#7"],"note":"结合 API 无状态的原因与完整历史、工具结果回传的机制；草稿，待人工复核"}
+{"id":"q011","question":"在 Agent API 请求中，工具定义和四种消息角色是什么关系？","type":"term","gold_chunk_ids":["book/chapter2.md#4"],"note":"检查 tools 顶层字段不是消息角色；草稿，待人工复核"}
+{"id":"q012","question":"为什么多跳问题比简单事实问题更可能受益于 Agentic RAG？","type":"multi_hop","gold_chunk_ids":["book/chapter3.md#40","book/chapter3.md#42"],"note":"检查 Agentic RAG 的迭代检索机制，以及多跳案例中初轮信息不足后进行第二轮聚焦检索；草稿，待人工复核"}

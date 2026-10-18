@@ -1,0 +1,14 @@
+{
+  "source_repo": "bojieli/ai-agent-book",
+  "source_url": "https://github.com/bojieli/ai-agent-book",
+  "commit": "dbc046eb896ac4e39aa19c7774c8bf49583b89a6",
+  "files": [
+    "introduction.md",
+    "chapter1.md",
+    "chapter2.md",
+    "chapter3.md",
+    "afterword.md"
+  ],
+  "excluded_files": ["reference-answers.md"],
+  "notes": "reference-answers.md is reserved for later evaluation and is excluded from the main index to avoid answer leakage."
+}

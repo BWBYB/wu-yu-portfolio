@@ -66,7 +66,7 @@ function isValidAgentBookResponse(value: unknown): value is AgentBookResponse {
 		typeof response.conversation_id === 'string' &&
 		Array.isArray(response.sources) &&
 		response.sources.every((source) => typeof source === 'string') &&
-		response.mode === 'dify'
+		response.mode === 'local-rag'
 	);
 }
 
@@ -90,8 +90,8 @@ export async function askAgentBook(question: string, conversationId: string | nu
 		});
 
 		if (!response.ok) {
-			if (response.status === 503) throw new Error('Agent Book 服务尚未配置，请在 backend/.env 设置 DIFY_API_KEY。');
-			if (response.status === 502) throw new Error('Agent Book 服务暂时不可用，请确认 Dify Chatflow 已发布。');
+			if (response.status === 503) throw new Error('Agent Book 服务尚未配置，请在 backend/.env 设置 OPENAI_API_KEY。');
+			if (response.status === 502) throw new Error('Agent Book 本地 RAG 服务暂时不可用，请检查索引和模型配置。');
 			throw new Error(`Agent Book request failed with status ${response.status}`);
 		}
 		const payload: unknown = await response.json();

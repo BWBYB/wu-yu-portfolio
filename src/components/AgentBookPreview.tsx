@@ -13,7 +13,7 @@ export default function AgentBookPreview() {
 			<div className="agent-preview__intro">
 				<p className="eyebrow">AGENT BOOK / RAG</p>
 				<h2>把学习资料，<br /><em>变成可问的知识。</em></h2>
-				<p>这是 Agent Book 前三章的本地 Dify RAG 演示。回答只来自已导入的学习资料，并尽量显示检索到的来源。</p>
+				<p>这是 Agent Book 学习资料的本地 Agentic RAG 问答。回答只来自已导入的学习资料，并显示实际检索到的来源。</p>
 			</div>
 			<ChatPanel variant="agent-book" recommendedPrompts={recommendedPrompts} />
 		</div>

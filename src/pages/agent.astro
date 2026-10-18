@@ -1,0 +1,10 @@
+---
+import AgentWorkspace from '../components/AgentWorkspace';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Agent · Wu Yu" description="WU YU 的个人知识库与 Agent Book 对话工作台。" activePath="/agent/">
+	<section class="agent-page">
+		<AgentWorkspace client:load />
+	</section>
+</BaseLayout>

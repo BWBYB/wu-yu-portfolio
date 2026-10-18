@@ -14,5 +14,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     globals: true,
     passWithNoTests: true,
+    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.worktrees/**', '**/.superpowers/**'],
   },
 });

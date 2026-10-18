@@ -4,3 +4,7 @@ openai>=1.66,<2
 pydantic-settings>=2.6,<3
 pytest>=8.3,<9
 uvicorn[standard]>=0.32,<1
+numpy>=2.0,<3
+torch>=2.6
+transformers>=4.51
+rank-bm25>=0.2,<1

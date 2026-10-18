@@ -27,8 +27,8 @@ const links = [
 					{link.label}
 				</a>
 			))}
-			<a class="header-agent-link" href="/#agent">
-				<span>和我的 Agent 聊聊</span>
+			<a class:list={{ 'header-agent-link': true, 'nav-link--active': activePath === '/agent/' }} href="/agent/" aria-current={activePath === '/agent/' ? 'page' : undefined}>
+				<span>打开 Agent</span>
 				<span aria-hidden="true">↗</span>
 			</a>
 		</nav>

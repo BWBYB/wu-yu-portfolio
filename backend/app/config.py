@@ -16,10 +16,6 @@ class Settings(BaseSettings):
     max_history: int = Field(default=8, ge=0)
     max_message_chars: int = Field(default=2000, ge=1)
     llm_timeout_seconds: float = Field(default=30.0, gt=0)
-    dify_base_url: str | None = None
-    dify_api_key: str | None = None
-    dify_user: str = "portfolio-user"
-    dify_timeout_seconds: float = Field(default=45.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

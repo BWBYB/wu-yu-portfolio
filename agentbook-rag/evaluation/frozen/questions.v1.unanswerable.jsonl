@@ -1,0 +1,4 @@
+{"id": "q051", "question": "这本书是否给出了深圳 2026 届 AI Agent 校招岗位的具体薪资范围？", "type": "unanswerable", "gold_chunk_ids": [], "note": "候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id": "q052", "question": "这本书是否记录了某个具体个人网站的 Vercel 部署域名？", "type": "unanswerable", "gold_chunk_ids": [], "note": "候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id": "q053", "question": "这本书是否给出了作者个人电脑上 Qwen3-Embedding-0.6B 的实际耗时基准？", "type": "unanswerable", "gold_chunk_ids": [], "note": "候选；资料外问题，后续用于拒答评估；待人工审核"}
+{"id": "q054", "question": "这本书是否提供了一个可直接登录的在线 Agent Book 问答网站账号？", "type": "unanswerable", "gold_chunk_ids": [], "note": "候选；资料外问题，后续用于拒答评估；待人工审核"}

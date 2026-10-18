@@ -2,12 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
-from app.dify import (
-    DifyConfigurationError,
-    DifyResponseError,
-    DifyUnavailableError,
-    run_chatflow,
-)
+from app.agentbook_rag import AgentBookConfigurationError, AgentBookUnavailableError, answer_agentbook
 from app.knowledge import load_knowledge
 from app.llm import ConfigurationError, ModelUnavailableError, generate_answer
 from app.models import AgentBookRequest, AgentBookResponse, ChatRequest, ChatResponse
@@ -68,19 +63,15 @@ async def agent_book_chat(
     if len(request.message) > settings.max_message_chars:
         raise HTTPException(status_code=422, detail="message exceeds configured limit")
     try:
-        result = await run_chatflow(
-            message=request.message,
-            conversation_id=request.conversation_id,
-            settings=settings,
-        )
-    except DifyConfigurationError as error:
-        raise HTTPException(status_code=503, detail="Agent Book 服务尚未配置") from error
-    except (DifyUnavailableError, DifyResponseError) as error:
-        raise HTTPException(status_code=502, detail="Agent Book 服务暂时不可用") from error
+        answer, sources, conversation_id = await answer_agentbook(request.message, settings)
+    except AgentBookConfigurationError as error:
+        raise HTTPException(status_code=503, detail="Agent Book 服务尚未配置，请配置 OPENAI_API_KEY") from error
+    except AgentBookUnavailableError as error:
+        raise HTTPException(status_code=502, detail="Agent Book 本地 RAG 服务暂时不可用") from error
 
     return AgentBookResponse(
-        answer=result.answer,
-        conversation_id=result.conversation_id,
-        sources=result.sources,
-        mode="dify",
+        answer=answer,
+        conversation_id=conversation_id,
+        sources=sources,
+        mode="local-rag",
     )

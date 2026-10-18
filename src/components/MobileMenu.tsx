@@ -27,9 +27,9 @@ export default function MobileMenu({ links }: { links: MenuLink[] }) {
 			{open && (
 				<nav id="mobile-navigation" className="mobile-menu__panel" aria-label="移动端主导航">
 					{links.map((link, index) => (
-						<a ref={index === 0 ? firstLinkRef : undefined} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
+						<a key={link.href} ref={index === 0 ? firstLinkRef : undefined} href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
 					))}
-					<a className="mobile-menu__agent" href="/#agent" onClick={() => setOpen(false)}>和我的 Agent 聊聊 <span aria-hidden="true">↗</span></a>
+					<a className="mobile-menu__agent" href="/agent/" onClick={() => setOpen(false)}>打开 Agent <span aria-hidden="true">↗</span></a>
 				</nav>
 			)}
 		</div>

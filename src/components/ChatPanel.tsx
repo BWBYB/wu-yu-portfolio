@@ -38,7 +38,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts, variant
 		try {
 			const result = isAgentBook ? await askAgentBook(trimmed, conversationId) : await askKnowledgeBase(trimmed, history);
 			if (conversationVersion.current !== requestVersion) return;
-			if (result.mode === 'dify') setConversationId(result.conversation_id);
+			if (result.mode === 'local-rag') setConversationId(result.conversation_id);
 			setMessages([...nextHistory, { role: 'assistant', content: result.answer, sources: result.sources, mode: result.mode }]);
 		} catch (caughtError) {
 			if (conversationVersion.current !== requestVersion) return;
@@ -98,7 +98,7 @@ export default function ChatPanel({ recommendedPrompts = defaultPrompts, variant
 						<p>{message.content}</p>
 						{message.role === 'assistant' && (
 							<span className="chat-message__mode">
-								{message.mode === 'dify' ? 'Agent Book · Dify' : message.mode === 'remote' ? '远程模式' : '演示模式'}
+				{message.mode === 'local-rag' ? 'Agent Book · 本地 RAG' : message.mode === 'remote' ? '远程模式' : '演示模式'}
 								{message.sources?.length ? ` · 来源：${message.sources.join('、')}` : ''}
 							</span>
 						)}
